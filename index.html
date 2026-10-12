@@ -161,7 +161,12 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 @keyframes ld-in{from{opacity:0;transform:translateY(8px) scale(.98)}}
 #levDlg h2{font:600 21px/1.3 var(--font);margin:0 0 24px;text-align:center}
 .ld-val{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
-.ld-val output{font:600 44px/1.2 var(--display);font-variant-numeric:tabular-nums}
+/* ตัวเลข Leverage พิมพ์ได้ — หน้าตาเหมือนตัวเลขใหญ่ ไม่มีกรอบจนกว่าจะโฟกัส */
+.ld-num{display:flex;align-items:baseline;justify-content:center;gap:2px;margin:0;font:600 44px/1.2 var(--display);color:var(--text)}
+#ldIn{width:3.2ch;height:auto;margin:0;padding:0 4px;border:1px solid transparent;border-radius:var(--r-sm);background:transparent;
+  font:inherit;text-align:right;font-variant-numeric:tabular-nums;color:inherit;transition:border-color .2s ease-out,background-color .2s ease-out}
+#ldIn:hover{background:var(--fill)}
+#ldIn:focus-visible{border-color:var(--primary);outline:2px solid var(--primary);outline-offset:3px;background:transparent}
 .ld-step{width:44px;height:44px;border:0;border-radius:var(--r-full);background:var(--bg);color:var(--text);font:400 21px/1 var(--font);cursor:pointer}
 /* Slider แบบ SwiftUI: track บาง 4px, ส่วนที่เลือกเป็นสี accent, thumb กลมสีขาว 28px + ป้ายค่าต่ำสุด/สูงสุดสองข้าง */
 .ld-slider{display:flex;align-items:center;gap:12px;font-size:14px;line-height:1.5;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -404,7 +409,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
     <h2 id="levDlgT">ปรับ Leverage</h2>
     <div class="ld-val">
       <button type="button" class="ld-step" data-d="-1" aria-label="ลด Leverage">−</button>
-      <output id="ldOut">10x</output>
+      <label class="ld-num"><span class="sr-only">Leverage (พิมพ์ได้ 1–125)</span><input id="ldIn" type="number" inputmode="numeric" min="1" max="125" step="1" value="10" autocomplete="off"><span aria-hidden="true">x</span></label>
       <button type="button" class="ld-step" data-d="1" aria-label="เพิ่ม Leverage">+</button>
     </div>
     <div class="ld-slider"><span aria-hidden="true">1x</span><input id="ldR" type="range" min="1" max="125" value="10" aria-labelledby="levDlgT" aria-valuetext="10x"><span aria-hidden="true">125x</span></div>
@@ -726,9 +731,9 @@ const levInfo = {
     return m > 0 ? `ขนาดโพซิชัน = ${fmt(m)} × ${l}x = <b>${fmt(m * l)} USDT</b> · ราคา Liquidation ให้ดูจากหน้า Exchange` : "";
   },
 };
-function ldUpdate() {
-  ldDraft = Math.min(125, Math.max(1, Math.round(ldDraft)));
-  $("ldOut").textContent = ldDraft + "x";
+function ldUpdate(typing) {
+  ldDraft = Math.min(125, Math.max(1, Math.round(ldDraft) || 1));
+  if (!typing) $("ldIn").value = ldDraft; // ระหว่างพิมพ์ไม่ทับค่าที่กำลังพิมพ์
   $("ldR").value = ldDraft;
   $("ldR").style.setProperty("--p", (ldDraft - 1) / 124 * 100 + "%");
   $("ldR").setAttribute("aria-valuetext", ldDraft + "x");
@@ -741,9 +746,12 @@ function refreshLevBtns() {
 }
 document.querySelectorAll(".lev-btn").forEach(b => b.onclick = () => {
   ldTarget = $(b.dataset.lev); ldDraft = parseFloat(ldTarget.value) || 10;
-  ldUpdate(); dlg.returnValue = ""; dlg.showModal(); $("ldR").focus();
+  ldUpdate(); dlg.returnValue = ""; dlg.showModal(); $("ldIn").focus(); $("ldIn").select(); // เปิดมาพิมพ์ทับได้ทันที
 });
 $("ldR").oninput = () => { ldDraft = +$("ldR").value; ldUpdate(); };
+$("ldIn").oninput = () => { const v = parseFloat($("ldIn").value); if (v > 0) { ldDraft = v; ldUpdate(true); } };
+$("ldIn").onblur = () => ldUpdate(); // ปัด/จำกัด 1–125 เมื่อพิมพ์เสร็จ
+$("ldIn").onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); ldUpdate(); dlg.close("ok"); } }; // Enter = ตกลง
 dlg.querySelectorAll(".ld-step").forEach(b => b.onclick = () => { ldDraft += +b.dataset.d; ldUpdate(); });
 dlg.querySelectorAll(".ld-chips button").forEach(b => b.onclick = () => { ldDraft = +b.dataset.v; ldUpdate(); });
 dlg.onclick = e => { if (e.target === dlg) dlg.close("cancel"); }; // คลิกพื้นหลังเพื่อปิด
