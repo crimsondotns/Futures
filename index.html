@@ -213,12 +213,48 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 .dd-opt.active{background:color-mix(in srgb,var(--text) 8%,transparent)}
 .dd-opt small{display:block;font-size:12px;line-height:1.5;color:var(--muted)}
 @media (forced-colors:active){.dd-list{background:Canvas;border-color:CanvasText}.dd-opt.active{outline:2px solid Highlight}}
+
+/* ---- Layout switcher (ให้ Client เลือกเอง) ---- */
+.nav-tabs{display:flex;gap:4px;align-self:stretch;flex-shrink:0}
+.nav-link{min-height:44px;padding:0 12px;border:0;border-bottom:2px solid transparent;background:none;color:var(--text);font:400 12px/1.5 var(--font);letter-spacing:0.01em;opacity:.72;cursor:pointer;transition:opacity .2s ease-out}
+.nav-link:hover{opacity:.8}
+.nav-link[aria-pressed=true]{opacity:1;border-bottom-color:var(--text)}
+.nav-link:focus-visible{outline:2px solid var(--primary);outline-offset:-4px;border-radius:var(--r-sm)}
+@media (max-width:734px){.nav-link{padding:0 8px}}
+@media (forced-colors:active){.nav-link[aria-pressed=true]{border-bottom-color:Highlight}}
+/* แถวละ 2 ช่อง — เฉพาะ layout สมดุล/กะทัดรัด; layout อื่นแตกเป็นแถวเดียวด้วย display:contents */
+.row2{display:contents}
+.is-compact .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.is-compact .row2>*{margin-bottom:0!important;min-width:0}
+.is-compact .ticket-in label,.is-compact .ticket-in .lev-wrap{margin-bottom:16px}
+.is-compact .grp{margin-bottom:24px}.is-compact .grp legend{margin-bottom:8px}
+.is-compact .ticket-in h2{margin-bottom:16px}
+.is-compact .affix::after{font-size:14px;right:12px}
+.is-compact .affix[data-unit="USDT"] input{padding-right:56px}
+.is-compact .affix[data-unit="%"] input{padding-right:32px}
+.is-compact .out{padding-top:16px}
+/* ผลคำนวณย้ายไปการ์ดขวา */
+.res4 .rr{grid-column:span 2}
+@media (max-width:734px){.res4 .rr{grid-column:1/-1}}
+/* แผนเทรดอยู่การ์ดขวา เหนือตาราง TP */
+.plan-ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 24px}
+.plan-ctl legend{float:left;width:100%;grid-column:1/-1}
+.plan-ctl label{margin:0!important}
+.plan-ctl .row2{display:contents!important}
+.plan-ctl .dd-list{right:auto;min-width:max(100%,280px)}
+.plan-ctl label:last-child .dd-list{left:auto;right:0}
+@media (max-width:734px){.plan-ctl{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">ข้ามไปเนื้อหา</a>
 <nav class="nav" aria-label="หัวเว็บ"><div class="nav-in">
   <span class="nav-title">Futures Trade Calculator</span>
+  <div class="nav-tabs" id="layouts" role="group" aria-label="รูปแบบการจัดหน้า">
+    <button type="button" class="nav-link" data-layout="balanced" title="ช่องกรอกแถวละ 2 · ผลคำนวณอยู่การ์ดขวา">สมดุล</button>
+    <button type="button" class="nav-link" data-layout="compact" title="ทุกอย่างของออเดอร์อยู่การ์ดซ้าย แบบกะทัดรัด">กะทัดรัด</button>
+    <button type="button" class="nav-link" data-layout="planright" title="ตั้งค่าแผนเทรดอยู่เหนือตาราง TP">แผนอยู่ขวา</button>
+  </div>
 </div></nav>
 <main class="wrap" id="main" tabindex="-1">
   <h1>คำนวณก่อนเทรด</h1>
@@ -233,6 +269,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
       </div>
       <fieldset class="grp">
         <legend>ราคา</legend>
+        <div class="row2">
         <label>ราคาเข้า<input id="aEntry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
         <div class="lev-wrap">
           <span class="lbl" id="aLevLbl">Leverage</span>
@@ -242,14 +279,17 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
             <input id="aLevIn" type="number" inputmode="decimal" autocomplete="off" min="1" max="125" step="any" value="10" aria-label="Leverage (ตัวเลข)">
           </div>
         </div>
+        </div>
         <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any" aria-describedby="aLiqHint"><span class="hint" id="aLiqHint"></span></label>
       </fieldset>
       <fieldset class="grp">
         <legend>เงินทุน</legend>
+        <div class="row2">
         <label>ทุน<span class="affix" data-unit="USDT"><input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any" aria-describedby="aBalU"><span class="sr-only" id="aBalU">หน่วย USDT</span></span></label>
         <label>ความเสี่ยงต่อไม้<span class="affix" data-unit="%"><input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any" aria-describedby="aRiskU aRiskHint"><span class="sr-only" id="aRiskU">หน่วยเปอร์เซ็นต์ของทุน</span></span><span class="hint" id="aRiskHint"></span></label>
+        </div>
       </fieldset>
-      <fieldset class="grp">
+      <fieldset class="grp" id="planGrp">
         <legend>แผนเทรด</legend>
         <label>สไตล์
         <select id="presets">
@@ -258,6 +298,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
           <option value="agg">ดุดัน — SL 80% ของระยะถึง Liq</option>
         </select>
         </label>
+        <div class="row2">
         <label>จำนวนเป้า TP
         <select id="tpn">
           <option value="1">1 TP — ปิดทั้งหมดที่เป้าเดียว</option>
@@ -275,6 +316,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
           <option value="5">5R — ไกล 5 เท่าของระยะ SL</option>
         </select>
         </label>
+        </div>
       </fieldset>
       <div class="msg" id="aMsg" role="status"></div>
       <section class="out" aria-labelledby="outT">
@@ -293,7 +335,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
         <div class="stat"><div class="k">จำนวนเหรียญ</div><div class="v" id="aQty">–</div></div>
         <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="aLoss">–</div></div>
         <div class="stat"><div class="k">กำไรรวม (ถ้าถึงทุก TP)</div><div class="v pos" id="aProfit">–</div></div>
-        <div class="stat wide"><div class="k">R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม)</div><div class="v" id="aRR">–</div></div>
+        <div class="stat wide" id="rrStat"><div class="k">R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม)</div><div class="v" id="aRR">–</div></div>
       </div>
       <div class="ladder" id="aLadder" aria-hidden="true"></div>
       <table class="plan">
@@ -480,6 +522,31 @@ function load() {
 load();
 syncLev();
 autoCalc();
+
+// ---- Layout switcher: ย้าย node จริง (ไม่ใช่ซ่อน/คัดลอก) เพื่อให้ id และ handler เดิมใช้ได้ ----
+const LAYOUTS = {
+  balanced:  { compact: true,  resultsRight: true,  planRight: false },
+  compact:   { compact: true,  resultsRight: false, planRight: false },
+  planright: { compact: false, resultsRight: true,  planRight: true },
+};
+const slStat = $("aSL").closest(".stat"), bufStat = $("aBuf").closest(".stat"), outRes = slStat.parentNode, outSec = $("outT").closest(".out");
+const planGrp = $("planGrp"), planHome = $("aMsg"), planTable = document.querySelector("table.plan");
+function applyLayout(name) {
+  const L = LAYOUTS[name] || LAYOUTS.balanced;
+  document.body.classList.toggle("is-compact", L.compact);
+  if (L.resultsRight) $("rrStat").before(slStat, bufStat); else outRes.append(slStat, bufStat);
+  $("rrStat").classList.toggle("wide", !L.resultsRight); $("rrStat").classList.toggle("rr", L.resultsRight);
+  outSec.hidden = L.resultsRight;
+  if (L.planRight) planTable.before(planGrp); else planHome.before(planGrp);
+  planGrp.classList.toggle("plan-ctl", L.planRight);
+  document.querySelectorAll("#layouts button").forEach(b => b.setAttribute("aria-pressed", b.dataset.layout === name));
+  try { localStorage.setItem("futures-layout", name); } catch {}
+}
+document.querySelectorAll("#layouts button").forEach(b => b.onclick = () => applyLayout(b.dataset.layout));
+let savedLayout = "balanced";
+try { savedLayout = localStorage.getItem("futures-layout") || "balanced"; } catch {}
+applyLayout(LAYOUTS[savedLayout] ? savedLayout : "balanced");
+
 
 // ---- คลิกราคาในตาราง TP เพื่อคัดลอก ----
 async function copyText(t) {
