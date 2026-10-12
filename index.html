@@ -109,6 +109,27 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
   .nav-link.on{border-bottom-color:Highlight}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---- auto mode: ticket layout + price ladder ---- */
+.res4{display:grid;grid-template-columns:repeat(4,1fr);gap:0 24px}
+.ladder{position:relative;height:96px;margin:8px 0 24px}
+.ladder .track{position:absolute;left:0;right:0;top:44px;height:8px;border-radius:var(--r-full);background:var(--bg)}
+.ladder .zone{position:absolute;top:44px;height:8px}
+.ladder .z-liq{background:color-mix(in srgb,var(--warn) 45%,transparent);border-radius:var(--r-full) 0 0 var(--r-full)}
+.ladder .z-loss{background:color-mix(in srgb,var(--short) 55%,transparent)}
+.ladder .z-win{background:color-mix(in srgb,var(--long) 55%,transparent);border-radius:0 var(--r-full) var(--r-full) 0}
+.ladder .mk{position:absolute;top:40px;width:2px;height:16px;margin-left:-1px;background:var(--text)}
+.ladder .lb{position:absolute;transform:translateX(-50%);font-size:12px;line-height:1.5;letter-spacing:0.01em;white-space:nowrap;text-align:center;color:var(--muted)}
+.ladder .lb b{display:block;font-weight:400;color:var(--text);font-variant-numeric:tabular-nums}
+.ladder .up{bottom:60px}.ladder .dn{top:60px}
+.ladder .lb.edge-l{transform:none}.ladder .lb.edge-r{transform:translateX(-100%)}
+@media (max-width:734px){.res4{grid-template-columns:1fr 1fr}}
+.ticket{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+.ticket-in{position:sticky;top:68px}
+.top .big2{grid-column:span 4;padding:0 0 24px}.top .big2 .v{font:600 44px/1.2 var(--display);font-variant-numeric:tabular-nums}
+.ticket .ladder{margin-top:32px}
+.res4 .wide{grid-column:1/-1}
+@media (max-width:900px){.ticket{grid-template-columns:1fr}.ticket-in{position:static}.top .big2{grid-column:span 2}}
 </style>
 </head>
 <body>
@@ -124,38 +145,32 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
   <h1>คำนวณก่อนเทรด</h1>
   <p class="sub">คำนวณขนาดโพซิชัน, Margin, ราคา Liquidation, กำไร/ขาดทุน และ Risk:Reward สำหรับ USDT-M Futures</p>
 
-  <div class="grid" id="auto" role="tabpanel" aria-labelledby="tab-auto">
-    <section class="card">
-      <h2>เลือกฝั่ง แล้วกรอก 2 ค่า</h2>
+  <div class="ticket" id="auto" role="tabpanel" aria-labelledby="tab-auto">
+    <section class="card ticket-in">
+      <h2>ออเดอร์</h2>
       <div class="side" id="aDir" role="group" aria-label="ฝั่ง">
         <button type="button" data-side="long" class="on">LONG</button>
         <button type="button" data-side="short">SHORT</button>
       </div>
-      <div class="row">
         <label>ราคาเข้า (Entry)<input id="aEntry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
         <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any"></label>
-      </div>
-      <div class="row">
         <label>ทุนในบัญชี (USDT)<input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any"></label>
         <label>ความเสี่ยงต่อไม้ (%)<input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any"></label>
-      </div>
-      <div class="row">
-      <label>สไตล์แผนเทรด
+      <div><label>สไตล์แผนเทรด
         <select id="presets">
           <option value="safe">ปลอดภัย — SL 40% ของระยะถึง Liq</option>
           <option value="bal" selected>สมดุล — SL 60% ของระยะถึง Liq</option>
           <option value="agg">ดุดัน — SL 80% ของระยะถึง Liq</option>
         </select>
-      </label>
-      <label>ระยะ TP สุดท้าย (TP3)
+      </label></div>
+      <div><label>ระยะ TP สุดท้าย (TP3)
         <select id="rrs">
           <option value="1.5">1.5R — ไกล 1.5 เท่าของระยะ SL</option>
           <option value="2">2R — ไกล 2 เท่าของระยะ SL</option>
           <option value="3" selected>3R — ไกล 3 เท่าของระยะ SL</option>
           <option value="5">5R — ไกล 5 เท่าของระยะ SL</option>
         </select>
-      </label>
-      </div>
+      </label></div>
       <div class="res">
         <div class="stat"><div class="k">ฝั่ง</div><div class="v" id="aSide">–</div></div>
         <div class="stat"><div class="k">Leverage (ประมาณ)</div><div class="v" id="aLev">–</div></div>
@@ -164,17 +179,17 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
       </div>
       <div class="msg" id="aMsg" role="status"></div>
     </section>
-
     <section class="card">
       <h2>แผนเทรดแนะนำ</h2>
-      <div class="res">
-        <div class="stat big"><div class="k">ขนาดโพซิชัน (Notional)</div><div class="v" id="aNotional">–</div></div>
+      <div class="res4 top">
+        <div class="stat big2"><div class="k">ขนาดโพซิชัน (Notional)</div><div class="v" id="aNotional">–</div></div>
         <div class="stat"><div class="k">Margin ที่ใช้</div><div class="v" id="aMargin">–</div></div>
         <div class="stat"><div class="k">จำนวนเหรียญ</div><div class="v" id="aQty">–</div></div>
         <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="aLoss">–</div></div>
         <div class="stat"><div class="k">กำไรรวม (ถ้าถึงทุก TP)</div><div class="v pos" id="aProfit">–</div></div>
-        <div class="stat"><div class="k">R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม)</div><div class="v" id="aRR">–</div></div>
+        <div class="stat wide"><div class="k">R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม)</div><div class="v" id="aRR">–</div></div>
       </div>
+      <div class="ladder" id="aLadder" aria-hidden="true"></div>
       <table class="plan">
         <caption class="sr-only">บันได Take Profit</caption>
         <thead><tr><th scope="col">เป้า</th><th scope="col">ราคา</th><th scope="col">ระยะ</th><th scope="col">ปิด</th><th scope="col">กำไร (R)</th></tr></thead>
@@ -460,6 +475,23 @@ function load() {
 
 load();
 autoCalc();
+
+// ---- เส้นราคา: Liq / SL / Entry / TP บนแกนเดียว (ฝั่งขาดทุนอยู่ซ้ายเสมอ) ----
+function drawLadder() {
+  const el = $("aLadder"); if (!el) return;
+  const a = autoPlan; if (!a) { el.innerHTML = ""; return; }
+  const pts = [["Liq", a.liq], ["SL", a.sl], ["Entry", a.entry], ...a.tps.map((t, i) => ["TP" + (i + 1), t.price])];
+  const ps = pts.map(p => p[1]), lo = Math.min(...ps), hi = Math.max(...ps);
+  const pos = p => (a.dir > 0 ? (p - lo) : (hi - p)) / (hi - lo) * 100;
+  const z = (c, x1, x2) => `<div class="zone ${c}" style="left:${Math.min(x1, x2)}%;width:${Math.abs(x2 - x1)}%"></div>`;
+  el.innerHTML = '<div class="track"></div>' +
+    z("z-liq", pos(a.liq), pos(a.sl)) + z("z-loss", pos(a.sl), pos(a.entry)) + z("z-win", pos(a.entry), pos(a.tps[2].price)) +
+    pts.map(([n, p], i) => { const x = pos(p), edge = x < 8 ? " edge-l" : x > 92 ? " edge-r" : "";
+      return `<div class="mk" style="left:${x}%"></div><div class="lb ${i % 2 ? "dn" : "up"}${edge}" style="left:${x}%">${n}<b>${px(p)}</b></div>`; }).join("");
+}
+new MutationObserver(drawLadder).observe($("aPlan"), { childList: true });
+drawLadder();
+
 </script>
 </body>
 </html>
