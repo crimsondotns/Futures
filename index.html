@@ -118,6 +118,28 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .btn-2{background:transparent;color:#2997ff;border-color:#2997ff;transition:background-color .2s ease-out,color .2s ease-out}
 .btn-2:hover{background:#2997ff;border-color:#2997ff;color:#fff}
 .btn-2:active{background:#0066cc;border-color:#0066cc;color:#fff}
+/* ---- Help dialog ---- */
+.link{display:inline-block;margin-top:12px;padding:0;border:0;background:none;color:var(--accent-text);font:400 14px/1.5 var(--font);cursor:pointer}
+.link:hover{text-decoration:underline}
+dialog#helpDlg{width:min(560px,calc(100% - 32px));max-height:min(85vh,800px);padding:32px;border:0;border-radius:var(--r-md);background:var(--card);color:var(--text);overflow-y:auto;overscroll-behavior:contain}
+dialog#helpDlg::backdrop{background:rgba(0,0,0,.32);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)}
+dialog#helpDlg[open]{animation:ld-in 320ms var(--ease)}
+#helpDlg h2:focus{outline:none}
+#helpDlg h2{font:600 21px/1.4 var(--font);margin:0 0 16px}
+#helpDlg h3{font:600 14px/1.5 var(--font);margin:24px 0 8px}
+#helpDlg p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)}
+#helpDlg p b{font-weight:600;color:var(--text)}
+.help-t{width:100%;border-collapse:collapse;font-size:14px;line-height:1.5}
+.help-t th{padding:8px 0;text-align:left;font-weight:400;color:var(--muted);border-bottom:1px solid var(--border)}
+.help-t td{padding:8px 0 8px 12px;text-align:right;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--border)}
+.help-t td.calc{color:var(--muted);font-size:12px}
+.help-t tr.key td:last-child{font-weight:600}
+.help-f{margin:0;padding-left:20px;font-size:14px;line-height:1.5}
+.help-f li{margin-bottom:8px}
+.help-note{font-size:12px!important;margin-top:16px!important}
+.ld-actions.one{grid-template-columns:1fr;margin-top:24px}
+@media (max-width:734px){dialog#helpDlg{padding:24px}.help-t td.calc{display:none}}
+@media (prefers-reduced-motion:reduce){dialog#helpDlg[open]{animation:none}}
 dialog#levDlg{width:min(420px,calc(100% - 32px));padding:32px;border:0;border-radius:var(--r-md);background:var(--card);color:var(--text)}
 dialog#levDlg::backdrop{background:rgba(0,0,0,.32);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)}
 dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
@@ -294,6 +316,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
         <label>ทุน<span class="affix" data-unit="USDT"><input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any" aria-describedby="aBalU"><span class="sr-only" id="aBalU">หน่วย USDT</span></span></label>
         <label>ความเสี่ยงต่อไม้<span class="affix" data-unit="%"><input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any" aria-describedby="aRiskU aRiskHint"><span class="sr-only" id="aRiskU">หน่วยเปอร์เซ็นต์ของทุน</span></span><span class="hint" id="aRiskHint"></span></label>
         </div>
+        <button type="button" class="link" id="helpBtn" aria-haspopup="dialog">ความเสี่ยงต่อไม้คิดยังไง?</button>
       </fieldset>
       <fieldset class="grp" id="planGrp">
         <legend>แผนเทรด</legend>
@@ -374,6 +397,28 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
       <button class="btn btn-alt" value="cancel">ยกเลิก</button>
       <button class="btn" value="ok">ตกลง</button>
     </div>
+  </form>
+</dialog>
+<dialog id="helpDlg" aria-labelledby="helpT">
+  <form method="dialog">
+    <h2 id="helpT" tabindex="-1">ความเสี่ยงต่อไม้ คิดยังไง</h2>
+    <p><b>ความเสี่ยงต่อไม้</b> คือ % ของทุนที่ยอมเสียได้สูงสุด <b>ถ้าราคาวิ่งไปโดน Stop Loss</b> — คุณเป็นคนตั้ง แล้วเว็บคำนวณย้อนกลับว่าควรเปิดโพซิชันขนาดเท่าไหร่</p>
+    <h3>ตัวเลขของคุณตอนนี้</h3>
+    <table class="help-t"><tbody id="helpRows"></tbody></table>
+    <h3>สูตร</h3>
+    <ol class="help-f">
+      <li>เงินที่ยอมเสีย = ทุน × ความเสี่ยงต่อไม้</li>
+      <li>ระยะถึง Liq = 1 / Leverage − MMR 0.5%</li>
+      <li>Stop Loss วางที่ 40 / 60 / 80% ของระยะ Entry → Liq (ปลอดภัย / สมดุล / ดุดัน)</li>
+      <li>จำนวนเหรียญ = เงินที่ยอมเสีย ÷ (|Entry − SL| + ค่าธรรมเนียม 0.05% × (Entry + SL))</li>
+      <li>ขนาดโพซิชัน = จำนวนเหรียญ × Entry · Margin = ขนาดโพซิชัน ÷ Leverage</li>
+    </ol>
+    <h3>คำถามที่พบบ่อย</h3>
+    <p><b>ความเสี่ยง 1% = Margin 1% ไหม?</b> ไม่ใช่ — Margin คือเงินที่วางค้ำ ส่วนความเสี่ยงคือเงินที่เสียจริงตอนโดน SL</p>
+    <p><b>เปลี่ยน Leverage แล้วเสียมากขึ้นไหม?</b> ไม่ — ยังเสียเท่าเดิม แต่ Leverage สูง Liq จะใกล้ขึ้น SL แคบลง เว็บจึงเปิดโพซิชันใหญ่ขึ้นได้</p>
+    <p><b>ควรตั้งเท่าไหร่?</b> ส่วนใหญ่ใช้ 0.5–2% ต่อไม้ — ที่ 1% แพ้ติดกัน 10 ไม้ ทุนยังเหลือราว 90%</p>
+    <p class="help-note">Liquidation เป็นค่าประมาณแบบ Isolated (MMR 0.5%) — ค่าจริงขึ้นกับ Exchange</p>
+    <div class="ld-actions one"><button class="btn" value="ok">เข้าใจแล้ว</button></div>
   </form>
 </dialog>
 <p class="sr-only" id="live" role="status" aria-live="polite"></p>
@@ -528,6 +573,27 @@ function load() {
 load();
 syncLev();
 autoCalc();
+
+// ---- Help dialog: อธิบายความเสี่ยงต่อไม้ด้วยตัวเลขจริงของผู้ใช้ตอนนี้ ----
+const helpDlg = $("helpDlg");
+$("helpBtn").onclick = () => {
+  const a = autoPlan;
+  const row = (k, calc, v, key) => `<tr${key ? ' class="key"' : ""}><th scope="row">${k}</th><td class="calc">${calc}</td><td>${v}</td></tr>`;
+  $("helpRows").innerHTML = !a ? row("ยังคำนวณไม่ได้", "", "กรอกค่าให้ครบก่อน") : [
+    row("เงินที่ยอมเสีย", `${fmt(a.bal)} × ${fmt(a.risk)}%`, `${fmt(a.riskAmt)} USDT`, 1),
+    row("Leverage / Liquidation", `${fmt(a.rawLev, 1)}x`, px(a.liq)),
+    row("Stop Loss", `${PRESETS[preset].sl * 100}% ของระยะ Entry → Liq`, px(a.sl), 1),
+    row("จำนวนเหรียญ", `${fmt(a.riskAmt)} ÷ ขาดทุนต่อเหรียญ`, fmt(a.qty, 6)),
+    row("ขนาดโพซิชัน", `${fmt(a.qty, 6)} × ${px(a.entry)}`, `${fmt(a.notional)} USDT`, 1),
+    row("Margin", `${fmt(a.notional)} ÷ ${fmt(a.rawLev, 1)}x`, `${fmt(a.margin)} USDT`),
+    row("ถ้าโดน SL เสีย", "รวมค่าธรรมเนียมแล้ว", `${fmt(a.riskAmt)} USDT`, 1),
+  ].join("");
+  helpDlg.showModal();
+  $("helpT").focus(); helpDlg.scrollTop = 0; // เปิดที่หัวเรื่อง ไม่ใช่เลื่อนลงไปที่ปุ่มล่างสุด
+};
+helpDlg.onclick = e => { if (e.target === helpDlg) helpDlg.close(); };
+helpDlg.onclose = () => $("helpBtn").focus();
+
 
 // ---- Layout switcher: ย้าย node จริง (ไม่ใช่ซ่อน/คัดลอก) เพื่อให้ id และ handler เดิมใช้ได้ ----
 const LAYOUTS = {
