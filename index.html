@@ -182,6 +182,8 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .tp-head .lbl{margin-bottom:0}.tp-head .link{margin-top:0}
 .tp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px 16px;margin-top:8px}
 .tp-list label{margin:0!important;font-size:12px;line-height:1.5}
+.tp-mode{margin:8px 0 0}.tp-mode button{font-size:12px;padding:0 8px}
+.tp-in[readonly]{background:var(--bg);border-color:transparent;color:var(--muted);cursor:default}
 .tp-list input{margin-top:4px}
 .grp>.tp-box:last-child{margin-bottom:0}
 .plan-ctl .tp-box{grid-column:1/-1;margin:0}
@@ -351,6 +353,10 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
         </label>
         <div class="tp-box" role="group" aria-labelledby="tpLbl">
           <div class="tp-head"><span class="lbl" id="tpLbl">ราคา TP</span><button type="button" class="link" id="tpSeed">ใช้ค่าแนะนำ</button></div>
+          <div class="side tp-mode" id="tpMode" role="group" aria-label="วิธีตั้งราคา TP">
+            <button type="button" data-m="first" class="on">ใส่ TP แรก</button>
+            <button type="button" data-m="last">ใส่ TP สุดท้าย</button>
+          </div>
           <div class="tp-list" id="tpList"></div>
         </div>
       </fieldset>
@@ -477,12 +483,32 @@ const suggestTP = (i, n) => {
   const r = n === 1 ? 2 : 1 + 2 * i / (n - 1); // กระจาย 1R → 3R
   return raw(L.entry + L.dir * L.slDist * r);
 };
-function renderTpInputs(seedAll) {
-  const box = $("tpList"), old = [...box.querySelectorAll("input")].map(x => x.value);
-  box.innerHTML = Array.from({ length: tpn }, (_, i) =>
-    `<label>TP${i + 1}<input class="tp-in" type="number" inputmode="decimal" autocomplete="off" min="0" step="any" value="${seedAll || !old[i] ? suggestTP(i, tpn) : old[i]}"></label>`).join("");
+// ผู้ใช้กรอก TP เดียว ที่เหลือคำนวณให้เป็นบันไดระยะเท่ากัน:
+//  "first": ใส่ TP1      → TPk = Entry ± k × ระยะ TP1
+//  "last" : ใส่ TP สุดท้าย → TPk = Entry ± (k / n) × ระยะ TP สุดท้าย
+let tpMode = "first";
+const editIdx = () => tpMode === "first" ? 0 : tpn - 1;
+function fillAutoTPs() {
+  const ins = [...document.querySelectorAll("#tpList .tp-in")], n = ins.length, entry = parseFloat($("aEntry").value);
+  const src = parseFloat(ins[editIdx()]?.value);
+  ins.forEach((x, i) => {
+    if (i === editIdx()) return;
+    const k = tpMode === "first" ? i + 1 : (i + 1) / n;
+    x.value = entry > 0 && src > 0 ? raw(entry + (src - entry) * k) : "";
+  });
 }
-$("tpList").addEventListener("input", () => { autoCalc(); save(); });
+function renderTpInputs(seedAll, keepLadder) {
+  const box = $("tpList"), old = [...box.querySelectorAll("input")].map(x => x.value);
+  const src = box.querySelector("input:not([readonly])")?.value; // ค่าที่ผู้ใช้กรอกเอง — คงไว้แม้เปลี่ยนจำนวน TP/โหมด
+  box.innerHTML = Array.from({ length: tpn }, (_, i) =>
+    `<label>TP${i + 1}<input class="tp-in" type="number" inputmode="decimal" autocomplete="off" min="0" step="any" value="${seedAll || !old[i] ? suggestTP(i, tpn) : old[i]}"${i !== editIdx() ? ' readonly tabindex="-1" aria-label="TP' + (i + 1) + ' (คำนวณอัตโนมัติ)"' : ""}></label>`).join("");
+  if (!seedAll && !keepLadder && src) box.querySelectorAll("input")[editIdx()].value = src;
+  fillAutoTPs();
+}
+document.querySelectorAll("#tpMode button").forEach(b => b.onclick = () => {
+  tpMode = b.dataset.m; pick("#tpMode", b); renderTpInputs(false, true); autoCalc(); save(); // สลับโหมด: บันไดเดิมไม่เปลี่ยน แค่ย้ายช่องที่กรอกได้
+});
+$("tpList").addEventListener("input", () => { fillAutoTPs(); autoCalc(); save(); });
 $("tpSeed").onclick = () => { renderTpInputs(true); autoCalc(); save(); };
 // Entry + Leverage ↔ Liquidation: รู้ 2 ค่าได้ค่าที่ 3 — ช่องที่ผู้ใช้แก้ล่าสุดเป็นตัวตั้ง
 // liqManual = ผู้ใช้กรอก Liq จริงจาก Exchange เอง → คำนวณ Leverage ย้อนกลับแทน
@@ -506,7 +532,7 @@ function syncLev() {
 $("aLevR").oninput = () => { $("aLevIn").value = $("aLevR").value; liqManual = false; syncLev(); autoCalc(); save(); };
 $("aLevIn").oninput = () => { $("aLevR").value = $("aLevIn").value; liqManual = false; syncLev(); autoCalc(); save(); };
 $("aLiq").oninput = () => { liqManual = true; syncLev(); autoCalc(); refreshLevBtns(); };
-$("aEntry").oninput = () => { syncLev(); autoCalc(); refreshLevBtns(); };
+$("aEntry").oninput = () => { syncLev(); fillAutoTPs(); autoCalc(); refreshLevBtns(); };
 $("aBal").oninput = autoCalc;
 document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
   const changed = autoSide !== b.dataset.side;
@@ -575,7 +601,7 @@ function autoCalc() {
   autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps.at(-1).price, lev: Math.min(125, Math.max(1, Math.round(lev))), };
 }
 
-const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, p: preset, n: tpn, t: [...document.querySelectorAll("#tpList .tp-in")].map(x => x.value).join(","), d: autoSide });
+const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, p: preset, n: tpn, tm: tpMode, t: [...document.querySelectorAll("#tpList .tp-in")].map(x => x.value).join(","), d: autoSide });
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
 function save() { try { localStorage.setItem("futures-auto", JSON.stringify(state())); } catch {} }
@@ -588,6 +614,7 @@ function load() {
   if (st.d === "long" || st.d === "short") { autoSide = st.d; pick("#aDir", document.querySelector(`#aDir button[data-side="${st.d}"]`)); }
   if ([...$("tpn").options].some(o => o.value === String(st.n))) $("tpn").value = tpn = +st.n;
   if (typeof st.t === "string") savedTP = st.t;
+  if (st.tm === "first" || st.tm === "last") { tpMode = st.tm; pick("#tpMode", document.querySelector(`#tpMode [data-m="${st.tm}"]`)); }
   if (+st.v >= 1) { $("aLevIn").value = st.v; $("aLevR").value = Math.round(st.v); }
   // ข้อมูลเก่า (ก่อนมี Leverage) มีแต่ Liq → ถือว่ากรอกเอง
   liqManual = st.m != null ? st.m == 1 : !!st.l;
@@ -598,6 +625,7 @@ load();
 syncLev();
 renderTpInputs();
 if (savedTP) savedTP.split(",").forEach((v, i) => { const x = document.querySelectorAll("#tpList .tp-in")[i]; if (x && v) x.value = v; });
+fillAutoTPs();
 autoCalc();
 
 // ---- Help dialog: อธิบายความเสี่ยงต่อไม้ด้วยตัวเลขจริงของผู้ใช้ตอนนี้ ----
