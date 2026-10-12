@@ -4,8 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Futures Trade Calculator</title>
+<meta name="description" content="คำนวณขนาดโพซิชัน, Stop Loss, ราคา Liquidation และแผน Take Profit ตาม Risk:Reward สำหรับ USDT-M Futures">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230071e3'/%3E%3Cpath d='M7 22l6-6 4 4 8-9' stroke='%23fff' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
 :root{
+  color-scheme:light dark;
   --primary:#0071e3;--primary-hover:#0077ed;--primary-active:#0066cc;
   --bg:#f5f5f7;--card:#ffffff;--surface:#fafafc;--text:#1d1d1f;--muted:#6e6e73;--border:#d2d2d7;
   --long:#1f7a35;--short:#d70015;--warn:#b25000;--on-accent:#ffffff;--on-signal:#ffffff;--accent-text:#0071e3;--field-border:#86868b;
@@ -28,7 +34,7 @@ html{scroll-padding-top:56px}
 .lev-wrap{margin-bottom:24px}
 body{margin:0;background:var(--bg);color:var(--text);font:400 17px/1.5 var(--font);-webkit-font-smoothing:antialiased}
 .nav{position:sticky;top:0;z-index:9999;min-height:44px;
-  background:color-mix(in srgb,var(--surface) 72%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  background:var(--surface);background:color-mix(in srgb,var(--surface) 72%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
   font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--text)}
 .nav-in{max-width:980px;min-height:44px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .nav-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -226,7 +232,11 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 const $ = id => document.getElementById(id);
 let side = "long";
 document.querySelectorAll(".side button").forEach(b => b.setAttribute("aria-pressed", b.classList.contains("on")));
-const fmt = (n, d = 2) => isFinite(n) ? n.toLocaleString("en-US", { maximumFractionDigits: d, minimumFractionDigits: d }) : "–";
+// cache formatter ต่อจำนวนทศนิยม — toLocaleString สร้างใหม่ทุกครั้ง (ช้ากว่า ~50 เท่า)
+const NF = {};
+const fmt = (n, d = 2) => isFinite(n)
+  ? (NF[d] ??= new Intl.NumberFormat("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })).format(n)
+  : "–";
 // ประกาศผลสรุปให้ screen reader หลังหยุดพิมพ์
 let liveT;
 const announce = text => { clearTimeout(liveT); liveT = setTimeout(() => $("live").textContent = text, 600); };
@@ -394,7 +404,12 @@ $("aUse").onclick = () => {
 };
 
 // ---------- คัดลอกแผน / ลิงก์แชร์ ----------
-const flash = (btn, text) => { const t = btn.textContent; btn.textContent = text; setTimeout(() => btn.textContent = t, 1500); };
+const flash = (btn, text) => {
+  btn.dataset.orig ??= btn.textContent; // กดซ้ำระหว่างโชว์ "คัดลอกแล้ว" ต้องไม่จำข้อความนั้นเป็นของเดิม
+  clearTimeout(btn._ft);
+  btn.textContent = text;
+  btn._ft = setTimeout(() => { btn.textContent = btn.dataset.orig; delete btn.dataset.orig; }, 1500);
+};
 const copy = async (text, btn) => {
   try { await navigator.clipboard.writeText(text); flash(btn, "คัดลอกแล้ว ✓"); $("live").textContent = "คัดลอกแล้ว"; }
   catch { prompt("คัดลอกข้อความนี้", text); }
