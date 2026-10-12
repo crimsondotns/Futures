@@ -265,7 +265,9 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 .dd-opt[aria-selected=true]::before{background:var(--accent-text);
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6.5l3 3 6-7' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6.5l3 3 6-7' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
-.dd-opt.active{background:color-mix(in srgb,var(--text) 14%,transparent);outline:2px solid var(--primary);outline-offset:-2px}
+.dd-opt.active{background:color-mix(in srgb,var(--text) 14%,transparent)}
+/* กรอบโฟกัสเฉพาะตอนใช้คีย์บอร์ด (เมาส์ hover ไม่มีกรอบ) */
+.dd-list.kbd .dd-opt.active{outline:2px solid var(--primary);outline-offset:-2px}
 .dd-opt small{display:block;font-size:12px;line-height:1.5;color:var(--muted)}
 @media (forced-colors:active){.dd-list{background:Canvas;border-color:CanvasText}.dd-opt.active{outline:2px solid Highlight}.tp-in[readonly]{border-color:CanvasText}.ld-chips [aria-pressed=true]{outline:2px solid Highlight}}
 
@@ -730,7 +732,7 @@ function enhanceSelect(sel) {
     li.innerHTML = `<span>${main}${sub ? `<small>${sub}</small>` : ""}</span>`;
     // preventDefault: dropdown อยู่ใน <label> — ไม่งั้นเบราว์เซอร์ส่งคลิกต่อไปที่ปุ่ม แล้วเมนูเปิดกลับมาเอง
     li.onclick = e => { e.preventDefault(); choose(i); close(true); };
-    li.onmousemove = () => setActive(i);
+    li.onmousemove = () => { list.classList.remove("kbd"); setActive(i); };
     list.append(li); return li;
   });
   wrap.prepend(btn); wrap.append(list);
@@ -759,6 +761,7 @@ function enhanceSelect(sel) {
   btn.onkeydown = e => { if (["ArrowDown", "ArrowUp"].includes(e.key)) { e.preventDefault(); open(); } };
   btn.setAttribute("aria-controls", list.id);
   list.onkeydown = e => {
+    list.classList.add("kbd");
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) { // type-ahead: ไปตัวเลือกถัดไปที่ขึ้นต้นด้วยตัวที่พิมพ์
       const n = opts.length, i = [...Array(n)].map((_, k) => (active + 1 + k) % n).find(k => opts[k].textContent.trim().toLowerCase().startsWith(e.key.toLowerCase()));
       if (i != null) setActive(i);
