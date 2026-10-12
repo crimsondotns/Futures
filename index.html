@@ -708,7 +708,7 @@ const LAYOUTS = {
 const slStat = $("aSL").closest(".stat"), bufStat = $("aBuf").closest(".stat"), outRes = slStat.parentNode, outSec = $("outT").closest(".out");
 const planGrp = $("planGrp"), planHome = $("aMsg"), planTable = document.querySelector("table.plan");
 function applyLayout(name) {
-  const L = LAYOUTS[name] || LAYOUTS.balanced;
+  const L = LAYOUTS[name] || LAYOUTS.planright;
   document.body.classList.toggle("is-compact", L.compact);
   if (L.resultsRight) $("rrStat").before(slStat, bufStat); else outRes.append(slStat, bufStat);
   $("rrStat").classList.toggle("wide", !L.resultsRight); $("rrStat").classList.toggle("rr", L.resultsRight);
@@ -719,9 +719,10 @@ function applyLayout(name) {
   try { localStorage.setItem("futures-layout", name); } catch {}
 }
 document.querySelectorAll("#layouts button").forEach(b => b.onclick = () => applyLayout(b.dataset.layout));
-let savedLayout = "balanced";
-try { savedLayout = localStorage.getItem("futures-layout") || "balanced"; } catch {}
-applyLayout(LAYOUTS[savedLayout] ? savedLayout : "balanced");
+const DEFAULT_LAYOUT = "planright"; // ค่าเริ่มต้นสำหรับผู้ใช้ใหม่ (ผู้ใช้เดิมใช้ค่าที่เลือกไว้)
+let savedLayout = DEFAULT_LAYOUT;
+try { savedLayout = localStorage.getItem("futures-layout") || DEFAULT_LAYOUT; } catch {}
+applyLayout(LAYOUTS[savedLayout] ? savedLayout : DEFAULT_LAYOUT);
 
 
 // ---- คลิกราคาในตาราง TP เพื่อคัดลอก ----
