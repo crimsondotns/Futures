@@ -29,9 +29,10 @@ h1{font:600 56px/1.1 var(--display);letter-spacing:-0.02em;margin:0 0 12px;text-
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 .card{background:var(--card);border-radius:var(--r-md);padding:32px}
 .card h2{font:600 21px/1.3 var(--font);margin:0 0 24px}
-.side{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin-bottom:24px;background:var(--bg);border-radius:var(--r-full)}
+.side{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;margin-bottom:24px;background:var(--bg);border-radius:var(--r-full)}
 .side button{min-height:36px;border:0;border-radius:var(--r-full);background:transparent;color:var(--muted);font:600 14px var(--font);cursor:pointer;
   transition:background-color 320ms var(--ease),color 320ms var(--ease)}
+.side button.on:not([data-side]){background:var(--card);color:var(--text)}
 .side button.on[data-side=long]{background:var(--long);color:#fff}
 .side button.on[data-side=short]{background:var(--short);color:#fff}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -58,6 +59,17 @@ footer{margin-top:48px;color:var(--muted);font-size:12px;line-height:1.5;text-al
   .grid{grid-template-columns:1fr}.card{padding:24px}
   .stat.big .v{font-size:32px}.wrap{padding:32px 16px 48px}
 }
+.tabs{display:flex;max-width:360px;margin:0 auto 32px}
+.preset{margin-bottom:24px}
+.plan{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+.plan th{font-weight:400;color:var(--muted);font-size:12px;text-align:right;padding:8px 0;border-bottom:1px solid var(--border)}
+.plan td{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;padding:12px 0;border-bottom:1px solid var(--border)}
+.plan th:first-child,.plan td:first-child{text-align:left;font-family:var(--font)}
+.steps{margin:24px 0 0;padding-left:20px;font-size:14px;color:var(--muted)}
+.steps li{margin-bottom:8px}.steps b{color:var(--text);font-weight:600}
+.btn{display:inline-block;margin-top:24px;min-height:44px;padding:12px 24px;border:0;border-radius:var(--r-full);background:var(--primary);color:#fff;font:400 17px var(--font);cursor:pointer;transition:background-color .2s ease-out}
+.btn:hover{background:var(--primary-hover)}.btn:active{background:var(--primary-active)}
+.hide{display:none}
 </style>
 </head>
 <body>
@@ -66,7 +78,56 @@ footer{margin-top:48px;color:var(--muted);font-size:12px;line-height:1.5;text-al
   <h1>คำนวณก่อนเทรด</h1>
   <p class="sub">คำนวณขนาดโพซิชัน, Margin, ราคา Liquidation, กำไร/ขาดทุน และ Risk:Reward สำหรับ USDT-M Futures</p>
 
-  <div class="grid">
+  <div class="side tabs" id="tabs">
+    <button data-tab="auto" class="on">อัตโนมัติ</button>
+    <button data-tab="manual">กำหนดเอง</button>
+  </div>
+
+  <div class="grid" id="auto">
+    <section class="card">
+      <h2>กรอกแค่ 2 ค่า</h2>
+      <div class="row">
+        <label>ราคาเข้า (Entry)<input id="aEntry" type="number" value="60000" min="0" step="any"></label>
+        <label>ราคา Liquidation<input id="aLiq" type="number" value="54300" min="0" step="any"></label>
+      </div>
+      <div class="row">
+        <label>ทุนในบัญชี (USDT)<input id="aBal" type="number" value="1000" min="0" step="any"></label>
+        <label>ความเสี่ยงต่อไม้ (%)<input id="aRisk" type="number" value="1" min="0" step="any"></label>
+      </div>
+      <label>สไตล์แผนเทรด</label>
+      <div class="side preset" id="presets">
+        <button data-p="safe">ปลอดภัย</button>
+        <button data-p="bal" class="on">สมดุล</button>
+        <button data-p="agg">ดุดัน</button>
+      </div>
+      <div class="res">
+        <div class="stat"><div class="k">ฝั่ง</div><div class="v" id="aSide">–</div></div>
+        <div class="stat"><div class="k">Leverage (ประมาณ)</div><div class="v" id="aLev">–</div></div>
+        <div class="stat"><div class="k">Stop Loss แนะนำ</div><div class="v neg" id="aSL">–</div></div>
+        <div class="stat"><div class="k">ระยะเผื่อก่อน Liq</div><div class="v" id="aBuf">–</div></div>
+      </div>
+      <div class="msg" id="aMsg"></div>
+    </section>
+
+    <section class="card">
+      <h2>แผนเทรดแนะนำ</h2>
+      <div class="res">
+        <div class="stat big"><div class="k">ขนาดโพซิชัน (Notional)</div><div class="v" id="aNotional">–</div></div>
+        <div class="stat"><div class="k">Margin ที่ใช้</div><div class="v" id="aMargin">–</div></div>
+        <div class="stat"><div class="k">จำนวนเหรียญ</div><div class="v" id="aQty">–</div></div>
+        <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="aLoss">–</div></div>
+        <div class="stat"><div class="k">กำไรรวม (ถ้าถึงทุก TP)</div><div class="v pos" id="aProfit">–</div></div>
+      </div>
+      <table class="plan">
+        <thead><tr><th>เป้า</th><th>ราคา</th><th>R:R</th><th>ปิด</th><th>กำไร</th></tr></thead>
+        <tbody id="aPlan"></tbody>
+      </table>
+      <ol class="steps" id="aSteps"></ol>
+      <button class="btn" id="aUse">ส่งไปหน้ากำหนดเอง</button>
+    </section>
+  </div>
+
+  <div class="grid hide" id="manual">
     <section class="card">
       <h2>ข้อมูลเทรด</h2>
       <div class="side">
@@ -122,14 +183,14 @@ let side = "long";
 const fmt = (n, d = 2) => isFinite(n) ? n.toLocaleString("en-US", { maximumFractionDigits: d, minimumFractionDigits: d }) : "–";
 const px = n => fmt(n, n >= 100 ? 2 : n >= 1 ? 4 : 6);
 
-document.querySelectorAll(".side button").forEach(b => b.onclick = () => {
+document.querySelectorAll("#manual .side button").forEach(b => b.onclick = () => {
   side = b.dataset.side;
-  document.querySelectorAll(".side button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("#manual .side button").forEach(x => x.classList.toggle("on", x === b));
   calc();
 });
 $("levR").oninput = () => { $("lev").value = $("levR").value; calc(); };
 $("lev").oninput = () => { $("levR").value = $("lev").value; calc(); };
-document.querySelectorAll("input:not(#levR):not(#lev)").forEach(i => i.oninput = calc);
+document.querySelectorAll("#manual input:not(#levR):not(#lev)").forEach(i => i.oninput = calc);
 
 function calc() {
   const v = id => parseFloat($(id).value);
@@ -172,6 +233,89 @@ function calc() {
   $("msg").textContent = msgs.join(" · ");
 }
 calc();
+
+// ---------- Auto mode ----------
+const PRESETS = {
+  safe: { sl: 0.4, rr: [1, 1.5, 2],   split: [0.5, 0.3, 0.2] },
+  bal:  { sl: 0.6, rr: [1.5, 2.5, 4], split: [0.5, 0.3, 0.2] },
+  agg:  { sl: 0.8, rr: [2, 3, 5],     split: [0.4, 0.3, 0.3] },
+};
+const AUTO_FEE = 0.0005, AUTO_MMR = 0.005;
+let preset = "bal", autoPlan = null;
+
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  $("auto").classList.toggle("hide", b.dataset.tab !== "auto");
+  $("manual").classList.toggle("hide", b.dataset.tab !== "manual");
+});
+document.querySelectorAll("#presets button").forEach(b => b.onclick = () => {
+  preset = b.dataset.p;
+  document.querySelectorAll("#presets button").forEach(x => x.classList.toggle("on", x === b));
+  autoCalc();
+});
+["aEntry", "aLiq", "aBal", "aRisk"].forEach(id => $(id).oninput = autoCalc);
+
+function autoCalc() {
+  const v = id => parseFloat($(id).value);
+  const entry = v("aEntry"), liq = v("aLiq"), bal = v("aBal"), risk = v("aRisk") / 100;
+  const ids = ["aSide","aLev","aSL","aBuf","aNotional","aMargin","aQty","aLoss","aProfit"];
+  const reset = m => { ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
+  if (![entry, liq, bal, risk].every(n => n > 0)) return reset("กรอก Entry, Liquidation, ทุน และความเสี่ยงให้ครบ");
+  if (entry === liq) return reset("Liquidation ต้องไม่เท่ากับราคาเข้า");
+
+  const dir = liq < entry ? 1 : -1; // Liq ต่ำกว่า Entry = LONG
+  const p = PRESETS[preset];
+  const dist = Math.abs(entry - liq);
+  const lev = 1 / (dist / entry + AUTO_MMR);
+  const sl = entry - dir * dist * p.sl;
+  const slDist = Math.abs(entry - sl);
+  const riskAmt = bal * risk;
+  const qty = riskAmt / (slDist + AUTO_FEE * (entry + sl));
+  const notional = qty * entry, margin = notional / lev;
+
+  const tps = p.rr.map((r, i) => {
+    const price = entry + dir * slDist * r;
+    const q = qty * p.split[i];
+    return { r, price, pct: p.split[i], profit: q * slDist * r - AUTO_FEE * q * (entry + price) };
+  });
+  const total = tps.reduce((a, t) => a + t.profit, 0);
+
+  $("aSide").innerHTML = dir > 0 ? '<span class="pos">LONG</span>' : '<span class="neg">SHORT</span>';
+  $("aLev").textContent = fmt(lev, 1) + "x";
+  $("aSL").textContent = px(sl);
+  $("aBuf").textContent = fmt(Math.abs(sl - liq) / entry * 100) + "%";
+  $("aNotional").textContent = fmt(notional) + " USDT";
+  $("aMargin").textContent = fmt(margin) + " USDT";
+  $("aQty").textContent = fmt(qty, 6);
+  $("aLoss").textContent = "-" + fmt(riskAmt) + " USDT";
+  $("aProfit").textContent = "+" + fmt(total) + " USDT";
+  $("aPlan").innerHTML = tps.map((t, i) =>
+    `<tr><td>TP${i + 1}</td><td>${px(t.price)}</td><td>1:${t.r}</td><td>${t.pct * 100}%</td><td class="pos">+${fmt(t.profit)}</td></tr>`).join("");
+  $("aSteps").innerHTML = [
+    `เปิด <b>${dir > 0 ? "LONG" : "SHORT"}</b> ที่ <b>${px(entry)}</b> ขนาด <b>${fmt(notional)} USDT</b> (${fmt(lev, 1)}x, Isolated)`,
+    `ตั้ง Stop Loss ที่ <b>${px(sl)}</b> ทันทีหลังเข้า — เสียไม่เกิน ${fmt(riskAmt)} USDT`,
+    `ถึง TP1 ปิด ${tps[0].pct * 100}% แล้ว<b>เลื่อน SL มาที่ราคาเข้า</b> (ไม้นี้ไม่ขาดทุนแล้ว)`,
+    `ถึง TP2 ปิดอีก ${tps[1].pct * 100}% และเลื่อน SL มาที่ TP1`,
+    `ปล่อยส่วนที่เหลือ ${tps[2].pct * 100}% วิ่งไป TP3`,
+  ].map(x => `<li>${x}</li>`).join("");
+
+  const msgs = [];
+  if (margin > bal) msgs.push("⚠ Margin เกินทุน — Liquidation ใกล้เกินไปหรือความเสี่ยงสูงเกิน");
+  if (lev > 50) msgs.push("⚠ Leverage สูงมาก — ราคาแกว่งนิดเดียวก็โดน SL");
+  $("aMsg").textContent = msgs.join(" · ");
+  autoPlan = { dir, entry, sl, tp: tps[1].price, lev: Math.min(125, Math.max(1, Math.round(lev))), bal, risk: risk * 100 };
+}
+
+$("aUse").onclick = () => {
+  if (!autoPlan) return;
+  const a = autoPlan;
+  document.querySelector(`#manual .side button[data-side=${a.dir > 0 ? "long" : "short"}]`).click();
+  Object.entries({ balance: a.bal, risk: a.risk, entry: a.entry, sl: +a.sl.toPrecision(8), tp: +a.tp.toPrecision(8), lev: a.lev, levR: a.lev })
+    .forEach(([k, val]) => $(k).value = val);
+  calc();
+  document.querySelector("#tabs button[data-tab=manual]").click();
+};
+autoCalc();
 </script>
 </body>
 </html>
