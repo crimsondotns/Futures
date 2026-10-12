@@ -167,10 +167,12 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .ladder .up{bottom:60px}.ladder .dn{top:60px}
 .ladder .lb.edge-l{transform:none}.ladder .lb.edge-r{transform:translateX(-100%)}
 @media (max-width:734px){.res4{grid-template-columns:1fr 1fr}}
-.ticket{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
-.ticket-in{align-self:start}
-/* sticky เฉพาะจอสูงพอให้เห็นทั้งการ์ด — ไม่งั้นผลคำนวณด้านล่างจะเลื่อนไปดูไม่ได้ */
-@media (min-width:901px) and (min-height:1100px){.ticket-in{position:sticky;top:68px}}
+/* การ์ดสองใบสูงเท่ากัน (stretch) — ใบที่สั้นกว่าดันบล็อกสุดท้ายลงล่างสุด ให้ขอบล่างเรียบเสมอกัน */
+.ticket{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:stretch}
+.ticket>.card{display:flex;flex-direction:column}
+.ticket>.card>*{flex:none}
+.ticket-in .out{margin-top:auto}
+.ticket>.card>.steps{margin-bottom:0}
 .grp{border:0;margin:0 0 32px;padding:0;min-width:0}
 .grp legend{padding:0;margin-bottom:16px;font:600 14px/1.5 var(--font);color:var(--text)}
 .grp>:last-child{margin-bottom:0}
@@ -186,7 +188,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 .top .big2{grid-column:span 4;padding:0 0 24px}.top .big2 .v{font:600 44px/1.2 var(--display);font-variant-numeric:tabular-nums}
 .ticket .ladder{margin-top:32px}
 .res4 .wide{grid-column:1/-1}
-@media (max-width:900px){.ticket{grid-template-columns:1fr}.ticket-in{position:static}.top .big2{grid-column:span 2}}
+@media (max-width:900px){.ticket{grid-template-columns:1fr}.top .big2{grid-column:span 2}}
 
 /* ---- dropdown: ปุ่มเหมือนช่องกรอก + เมนูพื้นเบลอแบบ header ---- */
 .dd{position:relative;margin-top:8px}
@@ -243,7 +245,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 @media (max-width:734px){.res4 .rr{grid-column:1/-1}}
 /* แผนเทรดอยู่การ์ดขวา เหนือตาราง TP */
 .plan-ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 24px}
-.plan-ctl legend{float:left;width:100%;grid-column:1/-1}
+.plan-ctl legend{float:left;width:100%;grid-column:1/-1;margin-bottom:-8px}
 .plan-ctl label{margin:0!important}
 .plan-ctl .row2{display:contents!important}
 .plan-ctl .dd-list{right:auto;min-width:max(100%,280px)}
