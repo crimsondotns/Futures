@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Futures Trade Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--text:#e6edf3;--muted:#8b949e;--long:#2ea043;--short:#f85149;--accent:#d29922;--input:#0d1117}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f6f8fa;--card:#fff;--line:#d0d7de;--text:#1f2328;--muted:#656d76;--input:#fff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:980px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 24px;font-size:.92rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+.card h2{font-size:1rem;margin:0 0 16px;color:var(--muted);font-weight:500}
+.side{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.side button{padding:10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.side button.on[data-side=long]{background:var(--long);border-color:var(--long);color:#fff}
+.side button.on[data-side=short]{background:var(--short);border-color:var(--short);color:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:12px}
+input,select{display:block;width:100%;margin-top:4px;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--input);color:var(--text);font:500 .95rem "JetBrains Mono",monospace}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+input[type=range]{padding:0;border:0;background:none}
+.lev{display:flex;gap:10px;align-items:center}
+.lev input[type=number]{width:90px}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat .k{font-size:.78rem;color:var(--muted)}
+.stat .v{font:500 1.05rem "JetBrains Mono",monospace;word-break:break-all}
+.stat.big{grid-column:span 2}
+.stat.big .v{font-size:1.4rem}
+.pos{color:var(--long)}.neg{color:var(--short)}.warn{color:var(--accent)}
+.msg{margin-top:12px;font-size:.85rem;color:var(--short);min-height:1.2em}
+footer{margin-top:24px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Futures Trade Calculator</h1>
+  <p class="sub">คำนวณขนาดโพซิชัน, Margin, ราคา Liquidation, กำไร/ขาดทุน และ Risk:Reward สำหรับ USDT-M Futures</p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>ข้อมูลเทรด</h2>
+      <div class="side">
+        <button data-side="long" class="on">LONG</button>
+        <button data-side="short">SHORT</button>
+      </div>
+      <div class="row">
+        <label>ทุนในบัญชี (USDT)<input id="balance" type="number" value="1000" min="0" step="any"></label>
+        <label>ความเสี่ยงต่อไม้ (%)<input id="risk" type="number" value="1" min="0" step="any"></label>
+      </div>
+      <div class="row">
+        <label>ราคาเข้า (Entry)<input id="entry" type="number" value="60000" min="0" step="any"></label>
+        <label>Stop Loss<input id="sl" type="number" value="59000" min="0" step="any"></label>
+      </div>
+      <div class="row">
+        <label>Take Profit<input id="tp" type="number" value="63000" min="0" step="any"></label>
+        <label>ค่าธรรมเนียม/ฝั่ง (%)<input id="fee" type="number" value="0.05" min="0" step="any"></label>
+      </div>
+      <label>Leverage
+        <div class="lev">
+          <input id="levR" type="range" min="1" max="125" value="10">
+          <input id="lev" type="number" min="1" max="125" value="10">
+        </div>
+      </label>
+      <label>Maintenance Margin Rate (%)<input id="mmr" type="number" value="0.5" min="0" step="any"></label>
+      <div class="msg" id="msg"></div>
+    </section>
+
+    <section class="card">
+      <h2>ผลลัพธ์</h2>
+      <div class="res">
+        <div class="stat big"><div class="k">ขนาดโพซิชัน (Notional)</div><div class="v" id="oNotional">–</div></div>
+        <div class="stat"><div class="k">จำนวนเหรียญ (Qty)</div><div class="v" id="oQty">–</div></div>
+        <div class="stat"><div class="k">Margin ที่ใช้</div><div class="v" id="oMargin">–</div></div>
+        <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="oLoss">–</div></div>
+        <div class="stat"><div class="k">กำไรถ้าถึง TP</div><div class="v pos" id="oProfit">–</div></div>
+        <div class="stat"><div class="k">Risk : Reward</div><div class="v" id="oRR">–</div></div>
+        <div class="stat"><div class="k">ROE ที่ TP</div><div class="v" id="oROE">–</div></div>
+        <div class="stat"><div class="k">ราคา Liquidation (ประมาณ)</div><div class="v warn" id="oLiq">–</div></div>
+        <div class="stat"><div class="k">ค่าธรรมเนียมรวม</div><div class="v" id="oFee">–</div></div>
+        <div class="stat"><div class="k">ระยะ SL</div><div class="v" id="oSLd">–</div></div>
+        <div class="stat"><div class="k">Break-even</div><div class="v" id="oBE">–</div></div>
+      </div>
+    </section>
+  </div>
+
+  <footer>Liquidation คำนวณแบบ Isolated Margin โดยประมาณ — ค่าจริงขึ้นกับ Exchange และ tier ของ MMR. ไม่ใช่คำแนะนำการลงทุน</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let side = "long";
+const fmt = (n, d = 2) => isFinite(n) ? n.toLocaleString("en-US", { maximumFractionDigits: d, minimumFractionDigits: d }) : "–";
+const px = n => fmt(n, n >= 100 ? 2 : n >= 1 ? 4 : 6);
+
+document.querySelectorAll(".side button").forEach(b => b.onclick = () => {
+  side = b.dataset.side;
+  document.querySelectorAll(".side button").forEach(x => x.classList.toggle("on", x === b));
+  calc();
+});
+$("levR").oninput = () => { $("lev").value = $("levR").value; calc(); };
+$("lev").oninput = () => { $("levR").value = $("lev").value; calc(); };
+document.querySelectorAll("input:not(#levR):not(#lev)").forEach(i => i.oninput = calc);
+
+function calc() {
+  const v = id => parseFloat($(id).value);
+  const bal = v("balance"), risk = v("risk") / 100, entry = v("entry"), sl = v("sl"),
+        tp = v("tp"), fee = v("fee") / 100, lev = v("lev"), mmr = v("mmr") / 100;
+  const dir = side === "long" ? 1 : -1;
+  const out = ["oNotional","oQty","oMargin","oLoss","oProfit","oRR","oROE","oLiq","oFee","oSLd","oBE"];
+  const reset = m => { out.forEach(o => $(o).textContent = "–"); $("msg").textContent = m; };
+
+  if (![bal, risk, entry, sl, lev].every(n => n > 0)) return reset("กรอกทุน, ความเสี่ยง, Entry, SL และ Leverage ให้ครบ");
+  if ((entry - sl) * dir <= 0) return reset(side === "long" ? "LONG: Stop Loss ต้องต่ำกว่าราคาเข้า" : "SHORT: Stop Loss ต้องสูงกว่าราคาเข้า");
+  const hasTP = tp > 0 && (tp - entry) * dir > 0;
+
+  // จำนวนเหรียญที่ทำให้ขาดทุน (รวมค่าธรรมเนียมเข้า+ออก) = ความเสี่ยงที่กำหนด
+  const riskAmt = bal * risk;
+  const qty = riskAmt / (Math.abs(entry - sl) + fee * (entry + sl));
+  const notional = qty * entry;
+  const margin = notional / lev;
+  const liq = entry * (1 - dir / lev + dir * mmr);
+  const feeTP = hasTP ? fee * qty * (entry + tp) : NaN;
+  const profit = hasTP ? qty * Math.abs(tp - entry) - feeTP : NaN;
+  const be = entry * (1 + dir * 2 * fee);
+
+  $("oNotional").textContent = fmt(notional) + " USDT";
+  $("oQty").textContent = fmt(qty, 6);
+  $("oMargin").textContent = fmt(margin) + " USDT";
+  $("oLoss").textContent = "-" + fmt(riskAmt) + " USDT";
+  $("oProfit").textContent = hasTP ? "+" + fmt(profit) + " USDT" : "–";
+  $("oRR").textContent = hasTP ? "1 : " + fmt(profit / riskAmt) : "–";
+  $("oROE").textContent = hasTP ? fmt(profit / margin * 100) + "%" : "–";
+  $("oLiq").textContent = liq > 0 ? px(liq) : "ไม่มี";
+  $("oFee").textContent = fmt(hasTP ? feeTP : fee * qty * (entry + sl), 4) + " USDT";
+  $("oSLd").textContent = fmt(Math.abs(entry - sl) / entry * 100) + "%";
+  $("oBE").textContent = px(be);
+
+  const msgs = [];
+  if (margin > bal) msgs.push("⚠ Margin เกินทุนในบัญชี — เพิ่ม Leverage หรือลดความเสี่ยง");
+  if ((sl - liq) * dir <= 0) msgs.push("⚠ ราคา Liquidation อยู่ก่อน Stop Loss — จะโดน Liq ก่อนถึง SL");
+  if (tp > 0 && !hasTP) msgs.push("Take Profit อยู่ผิดฝั่งของราคาเข้า");
+  $("msg").textContent = msgs.join(" · ");
+}
+calc();
+</script>
+</body>
+</html>
