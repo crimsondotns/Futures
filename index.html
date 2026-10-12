@@ -524,7 +524,8 @@ function enhanceSelect(sel) {
     const [main, sub] = o.textContent.split(" — ");
     const li = Object.assign(document.createElement("li"), { className: "dd-opt", role: "option", id: `${sel.id}-o${i}` });
     li.innerHTML = `<span>${main}${sub ? `<small>${sub}</small>` : ""}</span>`;
-    li.onclick = () => { choose(i); close(true); };
+    // preventDefault: dropdown อยู่ใน <label> — ไม่งั้นเบราว์เซอร์ส่งคลิกต่อไปที่ปุ่ม แล้วเมนูเปิดกลับมาเอง
+    li.onclick = e => { e.preventDefault(); choose(i); close(true); };
     li.onmousemove = () => setActive(i);
     list.append(li); return li;
   });
