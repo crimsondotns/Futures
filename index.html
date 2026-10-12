@@ -130,6 +130,32 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .ticket .ladder{margin-top:32px}
 .res4 .wide{grid-column:1/-1}
 @media (max-width:900px){.ticket{grid-template-columns:1fr}.ticket-in{position:static}.top .big2{grid-column:span 2}}
+
+/* ---- dropdown: ปุ่มเหมือนช่องกรอก + เมนูพื้นเบลอแบบ header ---- */
+.dd{position:relative;margin-top:8px}
+.dd select{position:absolute;inset:0;opacity:0;pointer-events:none}
+.dd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:48px;padding:12px 16px;border-radius:var(--r-sm);
+  border:1px solid var(--field-border);background:var(--card);color:var(--text);font:400 17px/1.4 var(--font);text-align:left;cursor:pointer;transition:border-color .2s ease-out}
+.dd-btn::after{content:"";flex:none;width:12px;height:8px;background:var(--muted);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  transition:transform 320ms var(--ease)}
+.dd-btn[aria-expanded=true]{border-color:var(--primary)}
+.dd-btn[aria-expanded=true]::after{transform:rotate(180deg)}
+.dd-list{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:50;margin:0;padding:4px;list-style:none;border-radius:var(--r-md);
+  background:var(--surface);background:color-mix(in srgb,var(--surface) 72%,transparent);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border:1px solid color-mix(in srgb,var(--border) 60%,transparent);
+  opacity:0;transform:translateY(-4px);visibility:hidden;transition:opacity 320ms var(--ease),transform 320ms var(--ease),visibility 0s 320ms}
+.dd.open .dd-list{opacity:1;transform:none;visibility:visible;transition:opacity 320ms var(--ease),transform 320ms var(--ease)}
+.dd-opt{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 12px;border-radius:var(--r-sm);font-size:17px;line-height:1.4;color:var(--text);cursor:pointer}
+.dd-opt::before{content:"";flex:none;width:12px;height:12px}
+.dd-opt[aria-selected=true]::before{background:var(--accent-text);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6.5l3 3 6-7' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6.5l3 3 6-7' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.dd-opt.active{background:color-mix(in srgb,var(--text) 8%,transparent)}
+.dd-opt small{display:block;font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--muted)}
+@media (forced-colors:active){.dd-list{background:Canvas;border-color:CanvasText}.dd-opt.active{outline:2px solid Highlight}}
 </style>
 </head>
 <body>
@@ -358,6 +384,7 @@ $("presets").onchange = () => {
   // เลือกสไตล์แล้วตั้ง R:R เริ่มต้นของสไตล์นั้นให้ (เปลี่ยนเองต่อได้)
   rr = PRESETS[preset].rr;
   $("rrs").value = rr;
+  $("rrs").dispatchEvent(new Event("dd-sync"));
   autoCalc(); save();
 };
 $("rrs").onchange = () => { rr = +$("rrs").value; autoCalc(); save(); };
@@ -475,6 +502,56 @@ function load() {
 
 load();
 autoCalc();
+
+// ---- dropdown: เมนูพื้นเบลอทับ <select> เดิม (select ยังเป็นตัวเก็บค่า + ยิง change) ----
+function enhanceSelect(sel) {
+  const wrap = document.createElement("div"); wrap.className = "dd";
+  sel.replaceWith(wrap); wrap.append(sel); sel.tabIndex = -1; sel.setAttribute("aria-hidden", "true");
+  const label = sel.closest("label"), lid = sel.id + "-lbl";
+  label.firstChild.replaceWith(Object.assign(document.createElement("span"), { id: lid, textContent: label.firstChild.textContent.trim() }));
+  const btn = Object.assign(document.createElement("button"), { type: "button", className: "dd-btn" });
+  const list = Object.assign(document.createElement("ul"), { className: "dd-list", id: sel.id + "-list", role: "listbox", tabIndex: -1 });
+  btn.setAttribute("aria-haspopup", "listbox"); btn.setAttribute("aria-expanded", "false");
+  btn.setAttribute("aria-labelledby", lid + " " + sel.id + "-btn"); btn.id = sel.id + "-btn";
+  list.setAttribute("aria-labelledby", lid);
+  const opts = [...sel.options].map((o, i) => {
+    const [main, sub] = o.textContent.split(" — ");
+    const li = Object.assign(document.createElement("li"), { className: "dd-opt", role: "option", id: `${sel.id}-o${i}` });
+    li.innerHTML = `<span>${main}${sub ? `<small>${sub}</small>` : ""}</span>`;
+    li.onclick = () => { choose(i); close(true); };
+    li.onmousemove = () => setActive(i);
+    list.append(li); return li;
+  });
+  wrap.prepend(btn); wrap.append(list);
+  let active = 0;
+  const setActive = i => { active = i; opts.forEach((o, j) => o.classList.toggle("active", j === i)); list.setAttribute("aria-activedescendant", opts[i].id); opts[i].scrollIntoView?.({ block: "nearest" }); };
+  const sync = () => { const i = sel.selectedIndex; btn.textContent = opts[i].firstChild.firstChild.textContent; opts.forEach((o, j) => o.setAttribute("aria-selected", j === i)); };
+  const choose = i => { if (sel.selectedIndex !== i) { sel.selectedIndex = i; sel.dispatchEvent(new Event("change")); } sync(); };
+  const open = () => { wrap.classList.add("open"); btn.setAttribute("aria-expanded", "true"); setActive(sel.selectedIndex); list.focus(); };
+  const close = focus => { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); if (focus) btn.focus(); };
+  btn.onclick = () => wrap.classList.contains("open") ? close(true) : open();
+  btn.onkeydown = e => { if (["ArrowDown", "ArrowUp"].includes(e.key)) { e.preventDefault(); open(); } };
+  list.onkeydown = e => {
+    const n = opts.length;
+    if (e.key === "ArrowDown") setActive((active + 1) % n);
+    else if (e.key === "ArrowUp") setActive((active - 1 + n) % n);
+    else if (e.key === "Home") setActive(0);
+    else if (e.key === "End") setActive(n - 1);
+    else if (e.key === "Enter" || e.key === " ") { choose(active); close(true); }
+    else if (e.key === "Escape") close(true);
+    else if (e.key === "Tab") return close(false);
+    else return;
+    e.preventDefault();
+  };
+  list.addEventListener("focusout", e => { if (!wrap.contains(e.relatedTarget)) close(false); });
+  document.addEventListener("pointerdown", e => { if (!wrap.contains(e.target)) close(false); });
+  sel.addEventListener("dd-sync", sync); // ให้โค้ดที่ตั้ง sel.value เองสั่ง sync ได้
+  sync();
+}
+["presets", "rrs"].forEach(id => enhanceSelect($(id)));
+const syncDD = () => ["presets", "rrs"].forEach(id => $(id).dispatchEvent(new Event("dd-sync")));
+syncDD();
+
 
 // ---- เส้นราคา: Liq / SL / Entry / TP บนแกนเดียว (ฝั่งขาดทุนอยู่ซ้ายเสมอ) ----
 function drawLadder() {
