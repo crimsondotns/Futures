@@ -12,6 +12,7 @@
 <style>
 :root{
   color-scheme:light dark;
+  --field-h:44px; /* ความสูงเดียวของทุก control: input, select, dropdown, ปุ่ม Leverage, segmented */
   --primary:#0071e3;--primary-hover:#0077ed;--primary-active:#0066cc;
   --bg:#f5f5f7;--card:#ffffff;--surface:#fafafc;--text:#1d1d1f;--muted:#6e6e73;--border:#d2d2d7;
   --long:#1f7a35;--short:#d70015;--warn:#b25000;--on-accent:#ffffff;--on-signal:#ffffff;--accent-text:#0071e3;--field-border:#86868b;--track:#e3e3e8;--fill:#e8e8ed;--fill-hover:#dcdce1;
@@ -38,7 +39,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:400 17px/1.5 var(--fon
   font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--text)}
 .nav-in{max-width:980px;min-height:44px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .nav-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-select{display:block;width:100%;margin-top:8px;padding:12px 40px 12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
+select{display:block;width:100%;height:var(--field-h);margin-top:8px;padding:0 40px 0 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
   background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2386868b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center;
   color:var(--text);font:400 17px/1.5 var(--font);appearance:none;-webkit-appearance:none;cursor:pointer;transition:border-color .2s ease-out}
 select:focus-visible{border-color:var(--primary);outline:2px solid var(--primary);outline-offset:3px}
@@ -51,13 +52,13 @@ h1{font:600 56px/1.25 var(--display);letter-spacing:normal;margin:0 0 12px;text-
 .card{background:var(--card);border-radius:var(--r-md);padding:32px}
 .card h2{font:600 21px/1.4 var(--font);margin:0 0 24px}
 .side{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;margin-bottom:24px;background:var(--bg);border-radius:var(--r-full)}
-.side button{min-height:44px;border:0;border-radius:var(--r-full);background:transparent;color:var(--muted);font:400 14px/1.5 var(--font);cursor:pointer;
+.side button{min-height:calc(var(--field-h) - 8px);border:0;border-radius:var(--r-full);background:transparent;color:var(--muted);font:400 14px/1.5 var(--font);cursor:pointer;
   transition:background-color 320ms var(--ease),color 320ms var(--ease)}
 .side button.on:not([data-side]){background:var(--card);color:var(--text)}
 .side button.on[data-side=long]{background:var(--long);color:var(--on-signal)}
 .side button.on[data-side=short]{background:var(--short);color:var(--on-signal)}
 label{display:block;font-size:14px;line-height:1.5;color:var(--muted);margin-bottom:24px}
-input{display:block;width:100%;margin-top:8px;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
+input{display:block;width:100%;height:var(--field-h);margin-top:8px;padding:0 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
   background:var(--card);color:var(--text);font:400 17px/1.5 var(--font);font-variant-numeric:tabular-nums;
   transition:border-color .2s ease-out}
 input:focus-visible,button:focus-visible{border-color:var(--primary);outline:2px solid var(--primary);outline-offset:3px}
@@ -93,7 +94,7 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .hide{display:none}
 /* หน่วยต่อท้ายในช่องกรอก (%, USDT) */
 .affix{position:relative;display:block}
-.affix::after{content:attr(data-unit);position:absolute;right:16px;bottom:13px;font:400 17px/1.5 var(--font);color:var(--muted);pointer-events:none}
+.affix::after{content:attr(data-unit);position:absolute;right:16px;top:50%;transform:translateY(-50%);font:400 17px/1.5 var(--font);color:var(--muted);pointer-events:none}
 .affix[data-unit="%"] input{padding-right:40px}
 .affix[data-unit="USDT"] input{padding-right:72px}
 /* ราคาในตาราง TP: คลิกเพื่อคัดลอก */
@@ -104,7 +105,7 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
   background:var(--text);color:var(--card);font-size:12px;line-height:1.5;letter-spacing:0.01em;white-space:nowrap;pointer-events:none}
 [hidden]{display:none!important}
 /* ---- Leverage: ปุ่มเปิด dialog + dialog พื้นหลังเบลอ ---- */
-.lev-btn{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
+.lev-btn{display:flex;align-items:center;justify-content:space-between;width:100%;height:var(--field-h);padding:0 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
   background:var(--card);color:var(--text);font:400 17px/1.5 var(--font);font-variant-numeric:tabular-nums;cursor:pointer;transition:border-color .2s ease-out}
 .lev-btn::after{content:"ปรับ";font:400 14px/1.5 var(--font);color:var(--accent-text)}
 .lev-btn:hover{border-color:var(--primary)}
@@ -233,7 +234,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 /* ---- dropdown: ปุ่มเหมือนช่องกรอก + เมนูพื้นเบลอแบบ header ---- */
 .dd{position:relative;margin-top:8px}
 .dd select{position:absolute;inset:0;opacity:0;pointer-events:none}
-.dd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:48px;padding:12px 16px;border-radius:var(--r-sm);
+.dd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:var(--field-h);padding:0 16px;border-radius:var(--r-sm);
   border:1px solid var(--field-border);background:var(--card);color:var(--text);font:400 17px/1.5 var(--font);text-align:left;cursor:pointer;transition:border-color .2s ease-out}
 .dd-btn::after{content:"";flex:none;width:12px;height:8px;background:var(--muted);
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
