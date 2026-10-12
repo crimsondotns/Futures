@@ -162,6 +162,10 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 #levDlg h2{font:600 21px/1.3 var(--font);margin:0 0 24px;text-align:center}
 .ld-val{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
 .ld-val output{font:600 44px/1.2 var(--display);font-variant-numeric:tabular-nums}
+/* cursor กระพริบ บอกว่าพิมพ์ตัวเลขได้ */
+.ld-val .caret{display:inline-block;width:2px;height:.8em;margin:0 2px;vertical-align:-.04em;border-radius:1px;background:var(--primary);animation:caret 1s steps(1) infinite}
+@keyframes caret{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.ld-val .caret{animation:none}}
 .ld-step{width:44px;height:44px;border:0;border-radius:var(--r-full);background:var(--bg);color:var(--text);font:400 21px/1 var(--font);cursor:pointer}
 /* Slider แบบ SwiftUI: track บาง 4px, ส่วนที่เลือกเป็นสี accent, thumb กลมสีขาว 28px + ป้ายค่าต่ำสุด/สูงสุดสองข้าง */
 .ld-slider{display:flex;align-items:center;gap:12px;font-size:14px;line-height:1.5;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -404,7 +408,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
     <h2 id="levDlgT">ปรับ Leverage</h2>
     <div class="ld-val">
       <button type="button" class="ld-step" data-d="-1" aria-label="ลด Leverage">−</button>
-      <output id="ldOut">10x</output>
+      <output id="ldOut"><span id="ldNum">10</span><span class="caret" aria-hidden="true"></span>x</output>
       <button type="button" class="ld-step" data-d="1" aria-label="เพิ่ม Leverage">+</button>
     </div>
     <div class="ld-slider"><span aria-hidden="true">1x</span><input id="ldR" type="range" min="1" max="125" value="10" aria-labelledby="levDlgT" aria-valuetext="10x"><span aria-hidden="true">125x</span></div>
@@ -728,7 +732,7 @@ const levInfo = {
 };
 function ldUpdate(typing) {
   ldDraft = Math.min(125, Math.max(1, Math.round(ldDraft) || 1));
-  $("ldOut").textContent = (typing ? ldTyped : ldDraft) + "x";
+  $("ldNum").textContent = typing ? ldTyped : ldDraft;
   $("ldR").value = ldDraft;
   $("ldR").style.setProperty("--p", (ldDraft - 1) / 124 * 100 + "%");
   $("ldR").setAttribute("aria-valuetext", ldDraft + "x");
