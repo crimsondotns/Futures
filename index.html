@@ -512,19 +512,16 @@ function syncStyleField() { // สไตล์ใช้เฉพาะตอน 
   $("presets").closest("label").hidden = rrTarget !== "custom";
 }
 $("rrPick").onchange = () => { rrTarget = $("rrPick").value; syncStyleField(); autoCalc(); save(); };
-// Entry + Leverage ↔ Liquidation: รู้ 2 ค่าได้ค่าที่ 3 — ช่องที่ผู้ใช้แก้ล่าสุดเป็นตัวตั้ง
-// liqManual = ผู้ใช้กรอก Liq จริงจาก Exchange เอง → คำนวณ Leverage ย้อนกลับแทน
+// Leverage → ประมาณ Liquidation ให้ (MMR 0.5%) จนกว่าผู้ใช้จะกรอก Liq จริงจาก Exchange เอง
+// liqManual = ผู้ใช้กรอก Liq เอง → ไม่ทับค่า และไม่ไปเปลี่ยน Leverage
 let liqManual = false;
 const round = (n, d) => +n.toFixed(d);
 function syncLev() {
   const entry = parseFloat($("aEntry").value), lev = parseFloat($("aLevIn").value), liq = parseFloat($("aLiq").value);
   const dir = autoSide === "long" ? 1 : -1;
+  // Leverage กับ Liquidation แยกกัน: Liq ที่กรอกเอง (จาก Exchange) ไม่ไปเปลี่ยน Leverage
   if (liqManual) {
-    if (entry > 0 && liq > 0 && (entry - liq) * dir > 0) {
-      const l = 1 / (Math.abs(entry - liq) / entry + AUTO_MMR);
-      $("aLevIn").value = round(l, 1); $("aLevR").value = Math.round(l);
-    }
-    $("aLiqHint").textContent = "ใช้ราคาที่กรอกเอง · ปรับ Leverage เพื่อกลับไปคำนวณอัตโนมัติ";
+    $("aLiqHint").textContent = "ใช้ราคาจาก Exchange ที่กรอก · ปรับ Leverage เพื่อประมาณ Liq ใหม่";
   } else {
     if (entry > 0 && lev >= 1) $("aLiq").value = round(entry * (1 - dir * (1 / lev - AUTO_MMR)), 8);
     $("aLiqHint").textContent = "";
@@ -556,7 +553,8 @@ function autoCalc() {
   if ((entry - liq) * dir <= 0) return reset(dir > 0 ? "LONG: ราคา Liquidation ต้องต่ำกว่าราคาเข้า" : "SHORT: ราคา Liquidation ต้องสูงกว่าราคาเข้า");
   const p = PRESETS[preset];
   const dist = Math.abs(entry - liq);
-  const lev = 1 / (dist / entry + AUTO_MMR);
+  const lev = parseFloat($("aLevIn").value); // Leverage ที่ผู้ใช้ตั้ง — ไม่คำนวณจาก Liq
+  if (!(lev >= 1)) return reset("ตั้ง Leverage ให้ถูกต้อง (1–125x)");
   const notional = margin * lev, qty = notional / entry;
   $("aMgnHint").textContent = `× ${fmt(lev, 1)}x = โพซิชัน ${fmt(notional)} USDT`;
 

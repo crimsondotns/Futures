@@ -9,9 +9,9 @@ Margin (ที่กรอก) × Leverage = ขนาดโพซิชัน
 
 ---
 
-## 1. Leverage ↔ ราคา Liquidation
+## 1. Leverage และราคา Liquidation
 
-Entry, Leverage และ Liquidation ผูกกัน รู้ 2 ค่าก็ได้ค่าที่ 3
+**Leverage** คือค่าที่คุณตั้ง ใช้คิดขนาดโพซิชัน — ส่วน **Liquidation** เว็บประมาณให้จาก Leverage
 
 ```
 ระยะถึง Liq (%) = 1 / Leverage − MMR (0.5%)
@@ -19,7 +19,7 @@ Liquidation (LONG)  = Entry × (1 − ระยะถึง Liq)
 Liquidation (SHORT) = Entry × (1 + ระยะถึง Liq)
 ```
 
-ถ้ากรอกราคา Liquidation จริงจาก Exchange เว็บจะคำนวณ Leverage ย้อนกลับให้
+ถ้ากรอกราคา Liquidation จริงจาก Exchange เว็บจะใช้ราคานั้นเช็กว่า SL อยู่ก่อน Liq — **Leverage ไม่เปลี่ยน** (Exchange คิด Liq ตาม tier ของ MMR จึงต่างจากสูตรประมาณ)
 
 ## 2. Stop Loss
 
