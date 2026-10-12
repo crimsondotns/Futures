@@ -14,7 +14,7 @@
   color-scheme:light dark;
   --primary:#0071e3;--primary-hover:#0077ed;--primary-active:#0066cc;
   --bg:#f5f5f7;--card:#ffffff;--surface:#fafafc;--text:#1d1d1f;--muted:#6e6e73;--border:#d2d2d7;
-  --long:#1f7a35;--short:#d70015;--warn:#b25000;--on-accent:#ffffff;--on-signal:#ffffff;--accent-text:#0071e3;--field-border:#86868b;
+  --long:#1f7a35;--short:#d70015;--warn:#b25000;--on-accent:#ffffff;--on-signal:#ffffff;--accent-text:#0071e3;--field-border:#86868b;--track:#e3e3e8;
   --r-sm:8px;--r-md:11px;--r-full:9999px;
   --ease:cubic-bezier(0.4,0,0.6,1);
   --font:"SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
@@ -24,7 +24,7 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#000000;--card:#1d1d1f;--surface:#161617;--text:#f5f5f7;--muted:#a1a1a6;--border:#424245;
   --primary:#0071e3;--long:#30d158;--short:#ff453a;--warn:#ff9f0a;
-  --on-signal:#000000;--accent-text:#2997ff;--field-border:#6e6e73}}
+  --on-signal:#000000;--accent-text:#2997ff;--field-border:#6e6e73;--track:#3a3a3c}}
 *{box-sizing:border-box}
 html{scroll-padding-top:56px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
@@ -97,6 +97,43 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .steps{margin:24px 0 0;padding-left:20px;font-size:14px;line-height:1.5;color:var(--text)}
 .steps li{margin-bottom:12px}.steps b{font-weight:600}
 .hide{display:none}
+[hidden]{display:none!important}
+/* ---- Leverage: ปุ่มเปิด dialog + dialog พื้นหลังเบลอ ---- */
+.lev-btn{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
+  background:var(--card);color:var(--text);font:400 17px/1.4 var(--font);font-variant-numeric:tabular-nums;cursor:pointer;transition:border-color .2s ease-out}
+.lev-btn::after{content:"ปรับ";font-size:14px;color:var(--accent-text)}
+.lev-btn:hover{border-color:var(--primary)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:12px 24px;border:1px solid transparent;border-radius:var(--r-full);background:var(--primary);color:var(--on-accent);font:400 17px/1 var(--font);cursor:pointer;transition:background-color .2s ease-out}
+.btn:hover{background:var(--primary-hover)}.btn:active{background:var(--primary-active)}
+.btn-2{background:transparent;color:var(--accent-text);border-color:var(--accent-text)}
+.btn-2:hover{background:var(--primary);border-color:var(--primary);color:var(--on-accent)}
+dialog#levDlg{width:min(420px,calc(100% - 32px));padding:32px;border:0;border-radius:var(--r-md);background:var(--card);color:var(--text)}
+dialog#levDlg::backdrop{background:rgba(0,0,0,.32);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)}
+dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
+@keyframes ld-in{from{opacity:0;transform:translateY(8px) scale(.98)}}
+#levDlg h2{font:600 21px/1.3 var(--font);margin:0 0 24px;text-align:center}
+.ld-val{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.ld-val output{font:600 44px/1.2 var(--display);font-variant-numeric:tabular-nums}
+.ld-step{width:44px;height:44px;border:0;border-radius:var(--r-full);background:var(--bg);color:var(--text);font:400 21px/1 var(--font);cursor:pointer}
+/* Slider แบบ SwiftUI: track บาง 4px, ส่วนที่เลือกเป็นสี accent, thumb กลมสีขาว 28px + ป้ายค่าต่ำสุด/สูงสุดสองข้าง */
+.ld-slider{display:flex;align-items:center;gap:12px;font-size:14px;line-height:1.5;color:var(--muted);font-variant-numeric:tabular-nums}
+#ldR{--p:7%;flex:1;height:44px;margin:0;padding:0;border:0;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer}
+#ldR::-webkit-slider-runnable-track{height:4px;border-radius:var(--r-full);background:linear-gradient(to right,var(--primary) var(--p),var(--track) var(--p))}
+#ldR::-moz-range-track{height:4px;border-radius:var(--r-full);background:var(--track)}
+#ldR::-moz-range-progress{height:4px;border-radius:var(--r-full);background:var(--primary)}
+#ldR::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-12px;border-radius:var(--r-full);background:#fff;border:0;
+  box-shadow:0 0.5px 4px rgba(0,0,0,.12),0 6px 13px rgba(0,0,0,.12);transition:transform .2s ease-out}
+#ldR::-moz-range-thumb{width:28px;height:28px;border-radius:var(--r-full);background:#fff;border:0;box-shadow:0 0.5px 4px rgba(0,0,0,.12),0 6px 13px rgba(0,0,0,.12)}
+#ldR:active::-webkit-slider-thumb{transform:scale(1.08)}
+#ldR:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:var(--r-sm)}
+@media (forced-colors:active){#ldR{-webkit-appearance:auto;appearance:auto}}
+.ld-chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}
+.ld-chips button{flex:1 1 auto;min-height:36px;padding:4px 8px;border:0;border-radius:var(--r-full);background:var(--bg);color:var(--text);font:400 14px/1.5 var(--font);cursor:pointer}
+.ld-chips button[aria-pressed=true]{background:var(--primary);color:var(--on-accent)}
+.ld-info{min-height:44px;margin:0 0 24px;font-size:14px;line-height:1.5;color:var(--muted);text-align:center}
+.ld-info .warn{display:block}
+.ld-actions{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (prefers-reduced-motion:reduce){dialog#levDlg[open]{animation:none}}
 .hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--muted)}
 .plan .rr{color:var(--muted);font-size:12px}
 @media (max-width:374px){.row,.res{grid-template-columns:1fr}.stat.big{grid-column:auto}}
@@ -177,7 +214,8 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
         <label>ราคาเข้า (Entry)<input id="aEntry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
         <div class="lev-wrap">
           <span class="lbl" id="aLevLbl">Leverage</span>
-          <div class="lev">
+          <button type="button" class="lev-btn" data-lev="aLevIn" aria-haspopup="dialog" aria-labelledby="aLevLbl aLevIn-btn" id="aLevIn-btn">10x</button>
+          <div class="lev" hidden>
             <input id="aLevR" type="range" min="1" max="125" value="10" aria-labelledby="aLevLbl">
             <input id="aLevIn" type="number" inputmode="decimal" autocomplete="off" min="1" max="125" step="any" value="10" aria-label="Leverage (ตัวเลข)">
           </div>
@@ -249,7 +287,8 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
       </div>
       <div class="lev-wrap">
         <span class="lbl" id="levLbl">Leverage</span>
-        <div class="lev">
+        <button type="button" class="lev-btn" data-lev="lev" aria-haspopup="dialog" aria-labelledby="levLbl lev-btn" id="lev-btn">10x</button>
+        <div class="lev" hidden>
           <input id="levR" type="range" min="1" max="125" value="10" aria-labelledby="levLbl">
           <input id="lev" type="number" inputmode="decimal" autocomplete="off" min="1" max="125" value="10" aria-label="Leverage (ตัวเลข)" aria-describedby="levHint">
         </div>
@@ -280,6 +319,25 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 </main>
 <footer>Liquidation คำนวณแบบ Isolated Margin โดยประมาณ — ค่าจริงขึ้นกับ Exchange และ tier ของ MMR. ไม่ใช่คำแนะนำการลงทุน</footer>
 
+<dialog id="levDlg" aria-labelledby="levDlgT">
+  <form method="dialog">
+    <h2 id="levDlgT">ปรับ Leverage</h2>
+    <div class="ld-val">
+      <button type="button" class="ld-step" data-d="-1" aria-label="ลด Leverage">−</button>
+      <output id="ldOut" aria-live="polite">10x</output>
+      <button type="button" class="ld-step" data-d="1" aria-label="เพิ่ม Leverage">+</button>
+    </div>
+    <div class="ld-slider"><span aria-hidden="true">1x</span><input id="ldR" type="range" min="1" max="125" value="10" aria-labelledby="levDlgT" aria-valuetext="10x"><span aria-hidden="true">125x</span></div>
+    <div class="ld-chips" role="group" aria-label="ค่าที่ใช้บ่อย">
+      <button type="button" data-v="1">1x</button><button type="button" data-v="5">5x</button><button type="button" data-v="10">10x</button><button type="button" data-v="20">20x</button><button type="button" data-v="50">50x</button><button type="button" data-v="100">100x</button><button type="button" data-v="125">125x</button>
+    </div>
+    <p class="ld-info" id="ldInfo"></p>
+    <div class="ld-actions">
+      <button class="btn btn-2" value="cancel">ยกเลิก</button>
+      <button class="btn" value="ok">ยืนยัน</button>
+    </div>
+  </form>
+</dialog>
 <p class="sr-only" id="live" role="status" aria-live="polite"></p>
 
 <script>
@@ -302,7 +360,7 @@ document.querySelectorAll("#manual .side button").forEach(b => b.onclick = () =>
   calc();
 });
 $("levR").oninput = () => { $("lev").value = $("levR").value; calc(); };
-$("lev").oninput = () => { $("levR").value = $("lev").value; calc(); };
+$("lev").oninput = () => { $("levR").value = $("lev").value; calc(); refreshLevBtns(); };
 document.querySelectorAll("#manual input:not(#levR):not(#lev)").forEach(i => i.oninput = calc);
 
 function calc() {
@@ -407,11 +465,12 @@ function syncLev() {
     if (entry > 0 && lev >= 1) $("aLiq").value = round(entry * (1 - dir * (1 / lev - AUTO_MMR)), 8);
     $("aLiqHint").textContent = "ประมาณจาก Leverage (MMR 0.5%) — แก้เป็นราคาจริงจาก Exchange ได้";
   }
+  refreshLevBtns();
 }
 $("aLevR").oninput = () => { $("aLevIn").value = $("aLevR").value; liqManual = false; syncLev(); autoCalc(); save(); };
 $("aLevIn").oninput = () => { $("aLevR").value = $("aLevIn").value; liqManual = false; syncLev(); autoCalc(); save(); };
-$("aLiq").oninput = () => { liqManual = true; syncLev(); autoCalc(); };
-$("aEntry").oninput = () => { syncLev(); autoCalc(); };
+$("aLiq").oninput = () => { liqManual = true; syncLev(); autoCalc(); refreshLevBtns(); };
+$("aEntry").oninput = () => { syncLev(); autoCalc(); refreshLevBtns(); };
 ["aBal", "aRisk"].forEach(id => $(id).oninput = autoCalc);
 document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
   autoSide = b.dataset.side;
@@ -495,6 +554,48 @@ function load() {
 load();
 syncLev();
 autoCalc();
+
+// ---- Leverage dialog: ใช้ร่วมกันทั้ง 2 โหมด — แก้ค่าใน <input> เดิมแล้วยิง input event ----
+const dlg = $("levDlg");
+let ldTarget = null, ldDraft = 10;
+const levInfo = {
+  aLevIn: l => {
+    const e = parseFloat($("aEntry").value), dir = autoSide === "long" ? 1 : -1;
+    return e > 0 ? `Liquidation ≈ <b>${px(e * (1 - dir * (1 / l - AUTO_MMR)))}</b> (ห่างจาก Entry ${fmt((1 / l - AUTO_MMR) * 100)}%)` : "";
+  },
+  lev: l => {
+    const e = parseFloat($("entry").value), m = parseFloat($("mmr").value) / 100 || 0, dir = side === "long" ? 1 : -1;
+    return e > 0 ? `Liquidation ≈ <b>${px(e * (1 - dir / l + dir * m))}</b> (ห่างจาก Entry ${fmt((1 / l - m) * 100)}%)` : "";
+  },
+};
+function ldUpdate() {
+  ldDraft = Math.min(125, Math.max(1, Math.round(ldDraft)));
+  $("ldOut").textContent = ldDraft + "x";
+  $("ldR").value = ldDraft;
+  $("ldR").style.setProperty("--p", (ldDraft - 1) / 124 * 100 + "%");
+  $("ldR").setAttribute("aria-valuetext", ldDraft + "x");
+  dlg.querySelectorAll(".ld-chips button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.v === ldDraft));
+  $("ldInfo").innerHTML = levInfo[ldTarget.id](ldDraft) +
+    (ldDraft > 50 ? '<span class="warn">Leverage สูงมาก — ราคาแกว่งนิดเดียวก็โดน Liquidation</span>' : "");
+}
+function refreshLevBtns() {
+  document.querySelectorAll(".lev-btn").forEach(b => { const v = parseFloat($(b.dataset.lev).value); b.textContent = (v > 0 ? +v.toFixed(1) : "–") + "x"; });
+}
+document.querySelectorAll(".lev-btn").forEach(b => b.onclick = () => {
+  ldTarget = $(b.dataset.lev); ldDraft = parseFloat(ldTarget.value) || 10;
+  ldUpdate(); dlg.returnValue = ""; dlg.showModal(); $("ldR").focus();
+});
+$("ldR").oninput = () => { ldDraft = +$("ldR").value; ldUpdate(); };
+dlg.querySelectorAll(".ld-step").forEach(b => b.onclick = () => { ldDraft += +b.dataset.d; ldUpdate(); });
+dlg.querySelectorAll(".ld-chips button").forEach(b => b.onclick = () => { ldDraft = +b.dataset.v; ldUpdate(); });
+dlg.onclick = e => { if (e.target === dlg) dlg.close("cancel"); }; // คลิกพื้นหลังเพื่อปิด
+dlg.onclose = () => {
+  if (dlg.returnValue === "ok" && ldTarget) { ldTarget.value = ldDraft; ldTarget.dispatchEvent(new Event("input")); }
+  refreshLevBtns();
+  $(ldTarget.id + "-btn").focus();
+};
+refreshLevBtns();
+
 
 // ---- dropdown: เมนูพื้นเบลอทับ <select> เดิม (select ยังเป็นตัวเก็บค่า + ยิง change) ----
 function enhanceSelect(sel) {
