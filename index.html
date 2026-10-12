@@ -185,7 +185,16 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 /* ราคา TP ที่ผู้ใช้กรอกเอง */
 .tp-box{margin-bottom:24px}
 .tp-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.tp-head .lbl{margin-bottom:0}.tp-head .link{margin-top:0}
+.tp-head .lbl{margin-bottom:0}
+/* chip dropdown: ปุ่มเม็ดยาเล็ก ใช้ enhanceSelect เดิม */
+.chip-dd{margin:0!important;font-size:0}
+.chip-dd>span:first-child{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.chip-dd .dd{margin:0}
+.chip-dd .dd-btn{height:28px;width:auto;padding:0 8px 0 12px;gap:4px;border-radius:var(--r-full);border-color:transparent;
+  background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--accent-text);font:600 12px/1.5 var(--font)}
+.chip-dd .dd-btn::before{content:"R:R";font-weight:400;opacity:.72}
+.chip-dd .dd-btn::after{width:10px;height:6px;background:var(--accent-text)}
+.chip-dd .dd-list{left:auto;right:0;min-width:240px}
 .tp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px 16px;margin-top:8px}
 .tp-list label{margin:0!important;font-size:12px;line-height:1.5}
 .tp-mode{margin:8px 0 0}.tp-mode button{font-size:12px;padding:0 8px}
@@ -257,6 +266,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 .dd.edge-r .dd-list{left:auto;right:0}
 .dd.edge-l .dd-list{left:0;right:auto}
 .dd-list{overflow-y:auto;overscroll-behavior:contain}
+.dd-list:focus{outline:none} /* โฟกัสแสดงด้วยแถว .active แทน */
 .dd.open .dd-list{opacity:1;transform:none;visibility:visible;transition:opacity 320ms var(--ease),transform 320ms var(--ease)}
 .dd-opt{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 12px;border-radius:var(--r-sm);font-size:14px;line-height:1.5;color:var(--text);cursor:pointer}
 .dd-opt::before{content:"";flex:none;width:12px;height:12px}
@@ -358,7 +368,17 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
         </select>
         </label>
         <div class="tp-box" role="group" aria-labelledby="tpLbl">
-          <div class="tp-head"><span class="lbl" id="tpLbl">ราคา TP</span><button type="button" class="link" id="tpSeed">ใช้ค่าแนะนำ</button></div>
+          <div class="tp-head"><span class="lbl" id="tpLbl">ราคา TP</span>
+            <label class="chip-dd">R:R เป้าหมาย
+              <select id="rrPick">
+                <option value="1.5">1 : 1.5 — ขั้นต่ำ</option>
+                <option value="2" selected>1 : 2</option>
+                <option value="3">1 : 3</option>
+                <option value="5">1 : 5</option>
+                <option value="custom">กำหนดเอง — ตามราคา TP ที่กรอก</option>
+              </select>
+            </label>
+          </div>
           <div class="side tp-mode" id="tpMode" role="group" aria-label="วิธีตั้งราคา TP">
             <button type="button" data-m="first" class="on">ใส่ TP แรก</button>
             <button type="button" data-m="last">ใส่ TP สุดท้าย</button>
@@ -515,8 +535,25 @@ function renderTpInputs(seedAll, keepLadder) {
 document.querySelectorAll("#tpMode button").forEach(b => b.onclick = () => {
   tpMode = b.dataset.m; pick("#tpMode", b); renderTpInputs(false, true); autoCalc(); save(); // สลับโหมด: บันไดเดิมไม่เปลี่ยน แค่ย้ายช่องที่กรอกได้
 });
-$("tpList").addEventListener("input", () => { fillAutoTPs(); autoCalc(); save(); });
-$("tpSeed").onclick = () => { renderTpInputs(true); autoCalc(); save(); };
+$("tpList").addEventListener("input", () => { setCustomRR(); fillAutoTPs(); autoCalc(); save(); });
+// ---- R:R preset (chip dropdown): ตั้งราคา TP ให้ R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม) เท่ากับ preset พอดี ----
+// ราคา TPi = Entry ± cᵢ·X  (first: cᵢ = i+1 · last: cᵢ = (i+1)/n)
+// กำไรรวม/เหรียญ = X·A·(1 − fee·dir) − 2·fee·Entry  โดย A = Σ splitᵢ·cᵢ  → แก้หา X ให้ = target × ขาดทุน/เหรียญ
+let rrTarget = "2";
+function applyRR() {
+  if (rrTarget === "custom") return;
+  const L = slLevels(); if (!L) return;
+  const split = tpn === 3 ? PRESETS[preset].split : SPLITS[tpn];
+  const c = split.map((_, i) => tpMode === "first" ? i + 1 : (i + 1) / tpn);
+  const A = split.reduce((a, sp, i) => a + sp * c[i], 0);
+  const lossPerCoin = L.slDist + AUTO_FEE * (L.entry + L.sl);
+  const X = (+rrTarget * lossPerCoin + 2 * AUTO_FEE * L.entry) / (A * (1 - AUTO_FEE * L.dir));
+  const ins = document.querySelectorAll("#tpList .tp-in");
+  if (ins[editIdx()]) ins[editIdx()].value = raw(L.entry + L.dir * c[editIdx()] * X);
+  fillAutoTPs();
+}
+$("rrPick").onchange = () => { rrTarget = $("rrPick").value; autoCalc(); save(); };
+const setCustomRR = () => { if (rrTarget !== "custom") { rrTarget = $("rrPick").value = "custom"; $("rrPick").dispatchEvent(new Event("dd-sync")); } };
 // Entry + Leverage ↔ Liquidation: รู้ 2 ค่าได้ค่าที่ 3 — ช่องที่ผู้ใช้แก้ล่าสุดเป็นตัวตั้ง
 // liqManual = ผู้ใช้กรอก Liq จริงจาก Exchange เอง → คำนวณ Leverage ย้อนกลับแทน
 let liqManual = false;
@@ -549,6 +586,7 @@ document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
 });
 
 function autoCalc() {
+  applyRR(); // preset R:R ≠ กำหนดเอง → ราคา TP ตามเป้า R:R ทุกครั้งที่ค่าอื่นเปลี่ยน
   const v = id => parseFloat($(id).value);
   const entry = v("aEntry"), liq = v("aLiq"), margin = v("aBal");
   const ids = ["aRR","aSL","aBuf","aNotional","aSlPct","aQty","aLoss","aProfit"];
@@ -612,7 +650,7 @@ function autoCalc() {
   autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps.at(-1).price, lev: Math.min(125, Math.max(1, Math.round(lev))), };
 }
 
-const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, p: preset, n: tpn, tm: tpMode, t: [...document.querySelectorAll("#tpList .tp-in")].map(x => x.value).join(","), d: autoSide });
+const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, p: preset, n: tpn, tm: tpMode, rt: rrTarget, t: [...document.querySelectorAll("#tpList .tp-in")].map(x => x.value).join(","), d: autoSide });
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
 function save() { try { localStorage.setItem("futures-auto", JSON.stringify(state())); } catch {} }
@@ -625,6 +663,7 @@ function load() {
   if (st.d === "long" || st.d === "short") { autoSide = st.d; pick("#aDir", document.querySelector(`#aDir button[data-side="${st.d}"]`)); }
   if ([...$("tpn").options].some(o => o.value === String(st.n))) $("tpn").value = tpn = +st.n;
   if (typeof st.t === "string") savedTP = st.t;
+  if ([...$("rrPick").options].some(o => o.value === st.rt)) $("rrPick").value = rrTarget = st.rt;
   if (st.tm === "first" || st.tm === "last") { tpMode = st.tm; pick("#tpMode", document.querySelector(`#tpMode [data-m="${st.tm}"]`)); }
   if (+st.v >= 1) { $("aLevIn").value = st.v; $("aLevR").value = Math.round(st.v); }
   // ข้อมูลเก่า (ก่อนมี Leverage) มีแต่ Liq → ถือว่ากรอกเอง
@@ -802,8 +841,8 @@ function enhanceSelect(sel) {
   sel.addEventListener("dd-sync", sync); // ให้โค้ดที่ตั้ง sel.value เองสั่ง sync ได้
   sync();
 }
-["presets", "tpn"].forEach(id => enhanceSelect($(id)));
-const syncDD = () => ["presets", "tpn"].forEach(id => $(id).dispatchEvent(new Event("dd-sync")));
+["presets", "tpn", "rrPick"].forEach(id => enhanceSelect($(id)));
+const syncDD = () => ["presets", "tpn", "rrPick"].forEach(id => $(id).dispatchEvent(new Event("dd-sync")));
 syncDD();
 
 
