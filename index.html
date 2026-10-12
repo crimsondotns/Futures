@@ -177,11 +177,6 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 @media (prefers-reduced-motion:reduce){dialog#levDlg[open]{animation:none}}
 .hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;color:var(--muted)}
 .plan .rr{color:var(--muted);font-size:12px}
-/* chip สถานะ R:R ขั้นต่ำ */
-.chip-rr{display:inline-block;vertical-align:middle;margin-left:8px;padding:0 8px;border-radius:var(--r-full);font:600 12px/20px var(--font);
-  background:color-mix(in srgb,var(--long) 14%,transparent);color:var(--long)}
-.chip-rr.bad{background:color-mix(in srgb,var(--short) 14%,transparent);color:var(--short)}
-@media (forced-colors:active){.chip-rr{border:1px solid CanvasText}}
 /* ราคา TP ที่ผู้ใช้กรอกเอง */
 .tp-box{margin-bottom:24px}
 .tp-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -226,7 +221,6 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .ticket{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:stretch}
 .ticket>.card{display:flex;flex-direction:column}
 .ticket>.card>*{flex:none}
-.ticket-in .out{margin-top:auto}
 .ticket>.card>.steps{margin-bottom:0}
 .grp{border:0;margin:0 0 32px;padding:0;min-width:0}
 .grp legend{padding:0;margin-bottom:16px;font:600 14px/1.5 var(--font);color:var(--text)}
@@ -235,8 +229,6 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 label:has(.hint:not(:empty)){margin-bottom:16px}
 .grp>label:last-child{margin-bottom:0}
 .side button.on{font-weight:600}
-.out{padding-top:24px;border-top:1px solid var(--border)}
-.out-t{margin:0 0 4px;font:600 14px/1.5 var(--font)}
 .ticket-in .stat .v{font-weight:600;white-space:nowrap;overflow-wrap:normal}
 .ticket-in .stat:nth-last-child(-n+2){border-bottom:0}
 .lev-btn::after{transition:opacity .2s ease-out}.lev-btn:hover::after{opacity:.72}
@@ -277,25 +269,6 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 .dd-opt small{display:block;font-size:12px;line-height:1.5;color:var(--muted)}
 @media (forced-colors:active){.dd-list{background:Canvas;border-color:CanvasText}.dd-opt.active{outline:2px solid Highlight}}
 
-/* ---- Layout switcher (ให้ Client เลือกเอง) ---- */
-.nav-tabs{display:flex;gap:4px;align-self:stretch;flex-shrink:0}
-.nav-link{min-height:44px;padding:0 12px;border:0;border-bottom:2px solid transparent;background:none;color:var(--text);font:400 12px/1.5 var(--font);letter-spacing:0.01em;opacity:.72;cursor:pointer;transition:opacity .2s ease-out}
-.nav-link:hover{opacity:.8}
-.nav-link[aria-pressed=true]{opacity:1;border-bottom-color:var(--text)}
-.nav-link:focus-visible{outline:2px solid var(--primary);outline-offset:-4px;border-radius:var(--r-sm)}
-@media (max-width:734px){.nav-link{padding:0 8px}}
-@media (forced-colors:active){.nav-link[aria-pressed=true]{border-bottom-color:Highlight}}
-/* แถวละ 2 ช่อง — เฉพาะ layout สมดุล/กะทัดรัด; layout อื่นแตกเป็นแถวเดียวด้วย display:contents */
-.row2{display:contents}
-.is-compact .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-.is-compact .row2>*{margin-bottom:0!important;min-width:0}
-.is-compact .ticket-in label,.is-compact .ticket-in .lev-wrap{margin-bottom:16px}
-.is-compact .grp{margin-bottom:24px}.is-compact .grp legend{margin-bottom:8px}
-.is-compact .ticket-in h2{margin-bottom:16px}
-.is-compact .affix::after{font-size:14px;right:12px}
-.is-compact .affix[data-unit="USDT"] input{padding-right:56px}
-.is-compact .affix[data-unit="%"] input{padding-right:32px}
-.is-compact .out{padding-top:16px}
 /* ผลคำนวณย้ายไปการ์ดขวา */
 .res4 .rr{grid-column:span 2}
 @media (max-width:734px){.res4 .rr{grid-column:1/-1}}
@@ -303,7 +276,6 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 .plan-ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 24px}
 .plan-ctl legend{float:left;width:100%;grid-column:1/-1;margin-bottom:-8px}
 .plan-ctl label{margin:0!important}
-.plan-ctl .row2{display:contents!important}
 .plan-ctl .dd-list{right:auto;min-width:max(100%,280px)}
 @media (max-width:734px){.plan-ctl{grid-template-columns:1fr}}
 </style>
@@ -312,11 +284,6 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 <a class="skip" href="#main">ข้ามไปเนื้อหา</a>
 <nav class="nav" aria-label="หัวเว็บ"><div class="nav-in">
   <span class="nav-title">Futures Trade Calculator</span>
-  <div class="nav-tabs" id="layouts" role="group" aria-label="รูปแบบการจัดหน้า">
-    <button type="button" class="nav-link" data-layout="balanced" title="ช่องกรอกแถวละ 2 · ผลคำนวณอยู่การ์ดขวา">สมดุล</button>
-    <button type="button" class="nav-link" data-layout="compact" title="ทุกอย่างของออเดอร์อยู่การ์ดซ้าย แบบกะทัดรัด">กะทัดรัด</button>
-    <button type="button" class="nav-link" data-layout="planright" title="ตั้งค่าแผนเทรดอยู่เหนือตาราง TP">แผนอยู่ขวา</button>
-  </div>
 </div></nav>
 <main class="wrap" id="main" tabindex="-1">
   <h1>คำนวณก่อนเทรด</h1>
@@ -331,7 +298,6 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
       </div>
       <fieldset class="grp">
         <legend>ราคา</legend>
-        <div class="row2">
         <label>ราคาเข้า<input id="aEntry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
         <div class="lev-wrap">
           <span class="lbl" id="aLevLbl">Leverage</span>
@@ -341,7 +307,6 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
             <input id="aLevIn" type="number" inputmode="decimal" autocomplete="off" min="1" max="125" step="any" value="10" aria-label="Leverage (ตัวเลข)">
           </div>
         </div>
-        </div>
         <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any" aria-describedby="aLiqHint"><span class="hint" id="aLiqHint"></span></label>
       </fieldset>
       <fieldset class="grp">
@@ -349,7 +314,22 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
         <label>Margin<span class="affix" data-unit="USDT"><input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="100" min="0" step="any" aria-describedby="aBalU aMgnHint"><span class="sr-only" id="aBalU">หน่วย USDT</span></span><span class="hint" id="aMgnHint"></span></label>
         <button type="button" class="link" id="helpBtn" aria-haspopup="dialog">คำนวณยังไง?</button>
       </fieldset>
-      <fieldset class="grp" id="planGrp">
+      <div class="msg" id="aMsg" role="status"></div>
+    </section>
+    <section class="card">
+      <h2>แผนเทรดแนะนำ</h2>
+      <div class="res4 top">
+        <div class="stat big2"><div class="k">ขนาดโพซิชัน (Notional)</div><div class="v" id="aNotional">–</div></div>
+        <div class="stat"><div class="k">ราคาวิ่งถึง SL</div><div class="v" id="aSlPct">–</div></div>
+        <div class="stat"><div class="k">จำนวนเหรียญ</div><div class="v" id="aQty">–</div></div>
+        <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="aLoss">–</div></div>
+        <div class="stat"><div class="k">กำไรรวม (ถ้าถึงทุก TP)</div><div class="v pos" id="aProfit">–</div></div>
+        <div class="stat"><div class="k">Stop Loss แนะนำ</div><div class="v neg" id="aSL">–</div></div>
+        <div class="stat"><div class="k">ระยะเผื่อก่อน Liq</div><div class="v" id="aBuf">–</div></div>
+        <div class="stat rr" id="rrStat"><div class="k">R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม)</div><div class="v"><span id="aRR">–</span></div></div>
+      </div>
+      <div class="ladder" id="aLadder" aria-hidden="true"></div>
+      <fieldset class="grp plan-ctl" id="planGrp">
         <legend>แผนเทรด</legend>
         <label>สไตล์
         <select id="presets">
@@ -386,26 +366,6 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
           <div class="tp-list" id="tpList"></div>
         </div>
       </fieldset>
-      <div class="msg" id="aMsg" role="status"></div>
-      <section class="out" aria-labelledby="outT">
-        <h3 class="out-t" id="outT">ผลคำนวณ</h3>
-        <div class="res">
-          <div class="stat"><div class="k">Stop Loss แนะนำ</div><div class="v neg" id="aSL">–</div></div>
-          <div class="stat"><div class="k">ระยะเผื่อก่อน Liq</div><div class="v" id="aBuf">–</div></div>
-        </div>
-      </section>
-    </section>
-    <section class="card">
-      <h2>แผนเทรดแนะนำ</h2>
-      <div class="res4 top">
-        <div class="stat big2"><div class="k">ขนาดโพซิชัน (Notional)</div><div class="v" id="aNotional">–</div></div>
-        <div class="stat"><div class="k">ราคาวิ่งถึง SL</div><div class="v" id="aSlPct">–</div></div>
-        <div class="stat"><div class="k">จำนวนเหรียญ</div><div class="v" id="aQty">–</div></div>
-        <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="aLoss">–</div></div>
-        <div class="stat"><div class="k">กำไรรวม (ถ้าถึงทุก TP)</div><div class="v pos" id="aProfit">–</div></div>
-        <div class="stat wide" id="rrStat"><div class="k">R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม)</div><div class="v"><span id="aRR">–</span> <span class="chip-rr" id="rrChip" hidden></span></div></div>
-      </div>
-      <div class="ladder" id="aLadder" aria-hidden="true"></div>
       <table class="plan">
         <caption class="sr-only">บันได Take Profit</caption>
         <thead><tr><th scope="col">เป้า</th><th scope="col">ราคา</th><th scope="col">ระยะ</th><th scope="col">ปิด</th><th scope="col">กำไร (R)</th></tr></thead>
@@ -585,7 +545,7 @@ function autoCalc() {
   const v = id => parseFloat($(id).value);
   const entry = v("aEntry"), liq = v("aLiq"), margin = v("aBal");
   const ids = ["aRR","aSL","aBuf","aNotional","aSlPct","aQty","aLoss","aProfit"];
-  const reset = m => { $("rrChip").hidden = true; ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
+  const reset = m => { ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
   $("aMgnHint").textContent = "";
   if (![entry, liq, margin].every(n => n > 0)) return reset("กรอก Entry, Liquidation และ Margin ให้ครบ");
   if (entry === liq) return reset("Liquidation ต้องไม่เท่ากับราคาเข้า");
@@ -625,8 +585,6 @@ function autoCalc() {
   $("aProfit").textContent = "+" + fmt(total) + " USDT";
   const rrv = total / riskAmt, rrOk = rrv >= MIN_RR - 1e-9; // เผื่อ floating point (1.4999… = 1.5)
   $("aRR").textContent = "1 : " + fmt(rrv);
-  Object.assign($("rrChip"), { hidden: false, textContent: rrOk ? `ผ่าน ≥ ${MIN_RR}` : `ต่ำกว่า ${MIN_RR}` });
-  $("rrChip").classList.toggle("bad", !rrOk);
   $("aPlan").innerHTML = tps.map((t, i) =>
     `<tr><th scope="row">TP${i + 1}</th><td><button type="button" class="copy" data-v="${raw(t.price)}" aria-label="คัดลอกราคา TP${i + 1} ${px(t.price)}">${px(t.price)}</button></td><td>${+t.r.toFixed(2)}R</td><td>${+(t.pct * 100).toFixed(0)}%</td><td class="pos">+${fmt(t.profit)} <span class="rr">(${fmt(t.profit / riskAmt)}R)</span></td></tr>`).join("");
   $("aSteps").innerHTML = [
@@ -699,30 +657,6 @@ helpDlg.onclick = e => { if (e.target === helpDlg) helpDlg.close(); };
 helpDlg.onclose = () => $("helpBtn").focus();
 
 
-// ---- Layout switcher: ย้าย node จริง (ไม่ใช่ซ่อน/คัดลอก) เพื่อให้ id และ handler เดิมใช้ได้ ----
-const LAYOUTS = {
-  balanced:  { compact: true,  resultsRight: true,  planRight: false },
-  compact:   { compact: true,  resultsRight: false, planRight: false },
-  planright: { compact: false, resultsRight: true,  planRight: true },
-};
-const slStat = $("aSL").closest(".stat"), bufStat = $("aBuf").closest(".stat"), outRes = slStat.parentNode, outSec = $("outT").closest(".out");
-const planGrp = $("planGrp"), planHome = $("aMsg"), planTable = document.querySelector("table.plan");
-function applyLayout(name) {
-  const L = LAYOUTS[name] || LAYOUTS.planright;
-  document.body.classList.toggle("is-compact", L.compact);
-  if (L.resultsRight) $("rrStat").before(slStat, bufStat); else outRes.append(slStat, bufStat);
-  $("rrStat").classList.toggle("wide", !L.resultsRight); $("rrStat").classList.toggle("rr", L.resultsRight);
-  outSec.hidden = L.resultsRight;
-  if (L.planRight) planTable.before(planGrp); else planHome.before(planGrp);
-  planGrp.classList.toggle("plan-ctl", L.planRight);
-  document.querySelectorAll("#layouts button").forEach(b => b.setAttribute("aria-pressed", b.dataset.layout === name));
-  try { localStorage.setItem("futures-layout", name); } catch {}
-}
-document.querySelectorAll("#layouts button").forEach(b => b.onclick = () => applyLayout(b.dataset.layout));
-const DEFAULT_LAYOUT = "planright"; // ค่าเริ่มต้นสำหรับผู้ใช้ใหม่ (ผู้ใช้เดิมใช้ค่าที่เลือกไว้)
-let savedLayout = DEFAULT_LAYOUT;
-try { savedLayout = localStorage.getItem("futures-layout") || DEFAULT_LAYOUT; } catch {}
-applyLayout(LAYOUTS[savedLayout] ? savedLayout : DEFAULT_LAYOUT);
 
 
 // ---- คลิกราคาในตาราง TP เพื่อคัดลอก ----
