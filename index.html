@@ -375,7 +375,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
                 <option value="2" selected>1 : 2</option>
                 <option value="3">1 : 3</option>
                 <option value="5">1 : 5</option>
-                <option value="custom">กำหนดเอง — ตามราคา TP ที่กรอก</option>
+                <option value="custom">กำหนดเอง — SL ตามสไตล์ แล้ว R:R เป็นผลลัพธ์</option>
               </select>
             </label>
           </div>
@@ -535,25 +535,21 @@ function renderTpInputs(seedAll, keepLadder) {
 document.querySelectorAll("#tpMode button").forEach(b => b.onclick = () => {
   tpMode = b.dataset.m; pick("#tpMode", b); renderTpInputs(false, true); autoCalc(); save(); // สลับโหมด: บันไดเดิมไม่เปลี่ยน แค่ย้ายช่องที่กรอกได้
 });
-$("tpList").addEventListener("input", () => { setCustomRR(); fillAutoTPs(); autoCalc(); save(); });
-// ---- R:R preset (chip dropdown): ตั้งราคา TP ให้ R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม) เท่ากับ preset พอดี ----
-// ราคา TPi = Entry ± cᵢ·X  (first: cᵢ = i+1 · last: cᵢ = (i+1)/n)
-// กำไรรวม/เหรียญ = X·A·(1 − fee·dir) − 2·fee·Entry  โดย A = Σ splitᵢ·cᵢ  → แก้หา X ให้ = target × ขาดทุน/เหรียญ
+$("tpList").addEventListener("input", () => { fillAutoTPs(); autoCalc(); save(); });
+// ---- R:R preset (chip dropdown): ผู้ใช้กรอก TP + เลือก R:R → คำนวณ SL ให้ R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม) = preset พอดี ----
+// กำไร/เหรียญ P = Σ splitᵢ·[(TPᵢ − Entry)·dir − fee·(Entry + TPᵢ)]   (ไม่ขึ้นกับ SL)
+// ขาดทุน/เหรียญ = d·(1 − fee·dir) + 2·fee·Entry   โดย d = |Entry − SL|  → ตั้งให้ = P / R:R แล้วแก้หา d
+// "custom" = ไม่ใช้ preset: SL วางตามสไตล์ (40/60/80% ของระยะถึง Liq) แล้ว R:R เป็นผลลัพธ์
 let rrTarget = "2";
-function applyRR() {
-  if (rrTarget === "custom") return;
-  const L = slLevels(); if (!L) return;
-  const split = tpn === 3 ? PRESETS[preset].split : SPLITS[tpn];
-  const c = split.map((_, i) => tpMode === "first" ? i + 1 : (i + 1) / tpn);
-  const A = split.reduce((a, sp, i) => a + sp * c[i], 0);
-  const lossPerCoin = L.slDist + AUTO_FEE * (L.entry + L.sl);
-  const X = (+rrTarget * lossPerCoin + 2 * AUTO_FEE * L.entry) / (A * (1 - AUTO_FEE * L.dir));
-  const ins = document.querySelectorAll("#tpList .tp-in");
-  if (ins[editIdx()]) ins[editIdx()].value = raw(L.entry + L.dir * c[editIdx()] * X);
-  fillAutoTPs();
+function slFromRR(entry, dir, prices, split) {
+  const P = prices.reduce((a, t, i) => a + split[i] * ((t - entry) * dir - AUTO_FEE * (entry + t)), 0);
+  const d = (P / +rrTarget - 2 * AUTO_FEE * entry) / (1 - AUTO_FEE * dir);
+  return d > 0 ? entry - dir * d : NaN;
 }
-$("rrPick").onchange = () => { rrTarget = $("rrPick").value; autoCalc(); save(); };
-const setCustomRR = () => { if (rrTarget !== "custom") { rrTarget = $("rrPick").value = "custom"; $("rrPick").dispatchEvent(new Event("dd-sync")); } };
+function syncStyleField() { // สไตล์ใช้เฉพาะตอน R:R = กำหนดเอง
+  $("presets").closest("label").hidden = rrTarget !== "custom";
+}
+$("rrPick").onchange = () => { rrTarget = $("rrPick").value; syncStyleField(); autoCalc(); save(); };
 // Entry + Leverage ↔ Liquidation: รู้ 2 ค่าได้ค่าที่ 3 — ช่องที่ผู้ใช้แก้ล่าสุดเป็นตัวตั้ง
 // liqManual = ผู้ใช้กรอก Liq จริงจาก Exchange เอง → คำนวณ Leverage ย้อนกลับแทน
 let liqManual = false;
@@ -586,7 +582,6 @@ document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
 });
 
 function autoCalc() {
-  applyRR(); // preset R:R ≠ กำหนดเอง → ราคา TP ตามเป้า R:R ทุกครั้งที่ค่าอื่นเปลี่ยน
   const v = id => parseFloat($(id).value);
   const entry = v("aEntry"), liq = v("aLiq"), margin = v("aBal");
   const ids = ["aRR","aSL","aBuf","aNotional","aSlPct","aQty","aLoss","aProfit"];
@@ -600,18 +595,20 @@ function autoCalc() {
   const p = PRESETS[preset];
   const dist = Math.abs(entry - liq);
   const lev = 1 / (dist / entry + AUTO_MMR);
-  const sl = entry - dir * dist * p.sl;
-  const slDist = Math.abs(entry - sl);
-  // Margin ที่ใส่ × Leverage = ขนาดโพซิชัน → เงินที่เสียตอนโดน SL เป็นผลลัพธ์ (รวมค่าธรรมเนียมเข้า+ออก)
   const notional = margin * lev, qty = notional / entry;
-  const riskAmt = qty * slDist + AUTO_FEE * qty * (entry + sl);
   $("aMgnHint").textContent = `× ${fmt(lev, 1)}x = โพซิชัน ${fmt(notional)} USDT`;
 
-  // TP มาจากราคาที่ผู้ใช้กรอก — R = ระยะ TP ÷ ระยะ SL (ใช้แสดงผลเท่านั้น)
+  // TP มาจากราคาที่ผู้ใช้กรอก
   const split = tpn === 3 ? p.split : SPLITS[tpn];
   const prices = [...document.querySelectorAll("#tpList .tp-in")].map(x => parseFloat(x.value));
   const bad = prices.findIndex(t => !(t > 0) || (t - entry) * dir <= 0);
-  if (bad >= 0) return reset(`TP${bad + 1} ต้อง${dir > 0 ? "สูง" : "ต่ำ"}กว่าราคาเข้า (${dir > 0 ? "LONG" : "SHORT"}) — หรือกด "ใช้ค่าแนะนำ"`);
+  if (bad >= 0) return reset(`TP${bad + 1} ต้อง${dir > 0 ? "สูง" : "ต่ำ"}กว่าราคาเข้า (${dir > 0 ? "LONG" : "SHORT"})`);
+
+  // SL: จาก TP + R:R preset หรือ (กำหนดเอง) จากสไตล์
+  const sl = rrTarget === "custom" ? entry - dir * dist * p.sl : slFromRR(entry, dir, prices, split);
+  if (!(sl > 0)) return reset(`TP ใกล้ราคาเข้าเกินไปสำหรับ R:R 1 : ${rrTarget} — ขยับ TP ให้ไกลขึ้น หรือเลือก R:R ต่ำลง`);
+  const slDist = Math.abs(entry - sl);
+  const riskAmt = qty * slDist + AUTO_FEE * qty * (entry + sl); // เงินที่เสียตอนโดน SL (รวมค่าธรรมเนียมเข้า+ออก)
   const tps = prices.map((price, i) => {
     const r = (price - entry) * dir / slDist, q = qty * split[i];
     return { r, price, pct: split[i], profit: q * (price - entry) * dir - AUTO_FEE * q * (entry + price) };
@@ -619,13 +616,14 @@ function autoCalc() {
   const total = tps.reduce((a, t) => a + t.profit, 0);
 
   $("aSL").textContent = px(sl);
-  $("aBuf").textContent = fmt(Math.abs(sl - liq) / entry * 100) + "%";
+  $("aSL").previousElementSibling.textContent = rrTarget === "custom" ? "Stop Loss แนะนำ (ตามสไตล์)" : `Stop Loss (จาก TP + R:R 1 : ${rrTarget})`;
+  $("aBuf").textContent = fmt((sl - liq) * dir / entry * 100) + "%"; // ติดลบ = SL เลย Liq
   $("aNotional").textContent = fmt(notional) + " USDT";
   $("aSlPct").textContent = fmt(slDist / entry * 100) + "%";
   $("aQty").textContent = fmt(qty, 6);
   $("aLoss").textContent = `-${fmt(riskAmt)} USDT (${fmt(riskAmt / margin * 100, 1)}%)`;
   $("aProfit").textContent = "+" + fmt(total) + " USDT";
-  const rrv = total / riskAmt, rrOk = rrv >= MIN_RR;
+  const rrv = total / riskAmt, rrOk = rrv >= MIN_RR - 1e-9; // เผื่อ floating point (1.4999… = 1.5)
   $("aRR").textContent = "1 : " + fmt(rrv);
   Object.assign($("rrChip"), { hidden: false, textContent: rrOk ? `ผ่าน ≥ ${MIN_RR}` : `ต่ำกว่า ${MIN_RR}` });
   $("rrChip").classList.toggle("bad", !rrOk);
@@ -643,6 +641,7 @@ function autoCalc() {
   ].map(x => `<li>${x}</li>`).join("");
 
   const msgs = [];
+  if ((sl - liq) * dir <= 0) msgs.push(`SL ${px(sl)} เลยราคา Liquidation ${px(liq)} — จะโดน Liq ก่อนถึง SL: ลด Leverage, ขยับ TP ให้ไกลขึ้น หรือเลือก R:R ต่ำลง`);
   if (!rrOk) msgs.push(`R:R ทั้งไม้ 1 : ${fmt(rrv)} ต่ำกว่าขั้นต่ำ 1 : ${MIN_RR} — ขยับ TP ให้ไกลขึ้น หรือเพิ่มสัดส่วนปิดที่ TP หลัง`);
   if (lev > 50) msgs.push("Leverage สูงมาก — ราคาแกว่งนิดเดียวก็โดน SL");
   $("aMsg").textContent = msgs.join(" · ");
@@ -672,6 +671,7 @@ function load() {
 ["aEntry", "aLiq", "aBal"].forEach(id => $(id).addEventListener("input", save));
 
 load();
+syncStyleField();
 syncLev();
 renderTpInputs();
 if (savedTP) savedTP.split(",").forEach((v, i) => { const x = document.querySelectorAll("#tpList .tp-in")[i]; if (x && v) x.value = v; });
