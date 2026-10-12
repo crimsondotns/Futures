@@ -108,6 +108,13 @@ footer{margin-top:48px;color:var(--muted);font-size:12px;line-height:1.5;text-al
         <button data-p="bal" class="on">สมดุล</button>
         <button data-p="agg">ดุดัน</button>
       </div>
+      <label>เป้า R:R สุดท้าย (TP3)</label>
+      <div class="side preset" id="rrs">
+        <button data-rr="1.5">1:1.5</button>
+        <button data-rr="2">1:2</button>
+        <button data-rr="3" class="on">1:3</button>
+        <button data-rr="5">1:5</button>
+      </div>
       <div class="res">
         <div class="stat"><div class="k">ฝั่ง</div><div class="v" id="aSide">–</div></div>
         <div class="stat"><div class="k">Leverage (ประมาณ)</div><div class="v" id="aLev">–</div></div>
@@ -245,12 +252,13 @@ calc();
 
 // ---------- Auto mode ----------
 const PRESETS = {
-  safe: { sl: 0.4, rr: [1, 1.5, 2],   split: [0.5, 0.3, 0.2] },
-  bal:  { sl: 0.6, rr: [1.5, 2.5, 4], split: [0.5, 0.3, 0.2] },
-  agg:  { sl: 0.8, rr: [2, 3, 5],     split: [0.4, 0.3, 0.3] },
+  safe: { sl: 0.4, rr: 2, split: [0.5, 0.3, 0.2] },
+  bal:  { sl: 0.6, rr: 3, split: [0.5, 0.3, 0.2] },
+  agg:  { sl: 0.8, rr: 5, split: [0.4, 0.3, 0.3] },
 };
 const AUTO_FEE = 0.0005, AUTO_MMR = 0.005;
-let preset = "bal", autoPlan = null;
+let preset = "bal", rr = 3, autoPlan = null;
+const pick = (group, b) => document.querySelectorAll(group + " button").forEach(x => (x.classList.toggle("on", x === b), x.setAttribute("aria-pressed", x === b)));
 
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
   document.querySelectorAll("#tabs button").forEach(x => (x.classList.toggle("on", x === b), x.setAttribute("aria-pressed", x === b)));
@@ -259,7 +267,15 @@ document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
 });
 document.querySelectorAll("#presets button").forEach(b => b.onclick = () => {
   preset = b.dataset.p;
-  document.querySelectorAll("#presets button").forEach(x => (x.classList.toggle("on", x === b), x.setAttribute("aria-pressed", x === b)));
+  pick("#presets", b);
+  // เลือกสไตล์แล้วตั้ง R:R เริ่มต้นของสไตล์นั้นให้ (เปลี่ยนเองต่อได้)
+  rr = PRESETS[preset].rr;
+  pick("#rrs", document.querySelector(`#rrs button[data-rr="${rr}"]`));
+  autoCalc();
+});
+document.querySelectorAll("#rrs button").forEach(b => b.onclick = () => {
+  rr = +b.dataset.rr;
+  pick("#rrs", b);
   autoCalc();
 });
 ["aEntry", "aLiq", "aBal", "aRisk"].forEach(id => $(id).oninput = autoCalc);
@@ -282,7 +298,8 @@ function autoCalc() {
   const qty = riskAmt / (slDist + AUTO_FEE * (entry + sl));
   const notional = qty * entry, margin = notional / lev;
 
-  const tps = p.rr.map((r, i) => {
+  // บันได TP: TP1 = 1R, TP2 = กึ่งกลาง, TP3 = เป้าที่เลือก
+  const tps = [1, (1 + rr) / 2, rr].map((r, i) => {
     const price = entry + dir * slDist * r;
     const q = qty * p.split[i];
     return { r, price, pct: p.split[i], profit: q * slDist * r - AUTO_FEE * q * (entry + price) };
