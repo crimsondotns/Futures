@@ -14,7 +14,7 @@
   color-scheme:light dark;
   --primary:#0071e3;--primary-hover:#0077ed;--primary-active:#0066cc;
   --bg:#f5f5f7;--card:#ffffff;--surface:#fafafc;--text:#1d1d1f;--muted:#6e6e73;--border:#d2d2d7;
-  --long:#1f7a35;--short:#d70015;--warn:#b25000;--on-accent:#ffffff;--on-signal:#ffffff;--accent-text:#0071e3;--field-border:#86868b;--track:#e3e3e8;
+  --long:#1f7a35;--short:#d70015;--warn:#b25000;--on-accent:#ffffff;--on-signal:#ffffff;--accent-text:#0071e3;--field-border:#86868b;--track:#e3e3e8;--fill:#e8e8ed;--fill-hover:#dcdce1;
   --r-sm:8px;--r-md:11px;--r-full:9999px;
   --ease:cubic-bezier(0.4,0,0.6,1);
   --font:"SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
@@ -24,7 +24,7 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#000000;--card:#1d1d1f;--surface:#161617;--text:#f5f5f7;--muted:#a1a1a6;--border:#424245;
   --primary:#0071e3;--long:#30d158;--short:#ff453a;--warn:#ff9f0a;
-  --on-signal:#000000;--accent-text:#2997ff;--field-border:#6e6e73;--track:#3a3a3c}}
+  --on-signal:#000000;--accent-text:#2997ff;--field-border:#6e6e73;--track:#3a3a3c;--fill:#3a3a3c;--fill-hover:#48484a}}
 *{box-sizing:border-box}
 html{scroll-padding-top:56px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
@@ -105,6 +105,10 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .lev-btn:hover{border-color:var(--primary)}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:12px 24px;border:1px solid transparent;border-radius:var(--r-full);background:var(--primary);color:var(--on-accent);font:400 17px/1 var(--font);cursor:pointer;transition:background-color .2s ease-out}
 .btn:hover{background:var(--primary-hover)}.btn:active{background:var(--primary-active)}
+/* ปุ่มใน dialog แบบ Alert ของ Apple (iCloud): Cancel = alternate พื้นเทา ตัวอักษรปกติ, ตกลง = primary สีฟ้า; ปุ่มกว้างเท่ากัน */
+.ld-actions .btn{border-radius:var(--r-sm)}
+.btn-alt{background:var(--fill);color:var(--text)}
+.btn-alt:hover{background:var(--fill-hover)}.btn-alt:active{background:var(--fill-hover)}
 /* Secondary button ตาม spec: ขอบ+ตัวอักษร #2997ff, hover เติม #2997ff, active #0066cc */
 .btn-2{background:transparent;color:#2997ff;border-color:#2997ff;transition:background-color .2s ease-out,color .2s ease-out}
 .btn-2:hover{background:#2997ff;border-color:#2997ff;color:#fff}
@@ -335,8 +339,8 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
     </div>
     <p class="ld-info" id="ldInfo"></p>
     <div class="ld-actions">
-      <button class="btn btn-2" value="cancel">ยกเลิก</button>
-      <button class="btn" value="ok">ยืนยัน</button>
+      <button class="btn btn-alt" value="cancel">ยกเลิก</button>
+      <button class="btn" value="ok">ตกลง</button>
     </div>
   </form>
 </dialog>
