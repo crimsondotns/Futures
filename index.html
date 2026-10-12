@@ -130,14 +130,21 @@ dialog#helpDlg[open]{animation:ld-in 320ms var(--ease)}
 #helpDlg p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)}
 #helpDlg p b{font-weight:600;color:var(--text)}
 .help-t{width:100%;border-collapse:collapse;font-size:14px;line-height:1.5}
-.help-t th{padding:8px 0;text-align:left;font-weight:400;color:var(--muted);border-bottom:1px solid var(--border)}
-.help-t td{padding:8px 0 8px 12px;text-align:right;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--border)}
-.help-t td.calc{color:var(--muted);font-size:12px}
+.help-t th{padding:8px 0;white-space:nowrap;text-align:left;font-weight:400;color:var(--muted);border-bottom:1px solid var(--border)}
+.help-t td{padding:8px 0 8px 12px;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--border)}
+.help-t td.calc{color:var(--muted);font-size:12px;white-space:normal}
+.help-t td small{display:block;font-size:12px;font-weight:400;color:var(--muted)}
 .help-t tr.key td:last-child{font-weight:600}
 .help-f{margin:0;padding-left:20px;font-size:14px;line-height:1.5}
 .help-f li{margin-bottom:8px}
 .help-note{font-size:12px!important;margin-top:16px!important}
 .ld-actions.one{grid-template-columns:1fr;margin-top:24px}
+/* ปุ่มใน help dialog ลอยติดขอบล่างตลอด (floating footer) — เนื้อหาเลื่อนผ่านใต้พื้นเบลอ */
+#helpDlg .ld-actions{position:sticky;bottom:-32px;z-index:1;margin:24px -32px -32px;padding:16px 32px 32px;
+  background:var(--card);background:color-mix(in srgb,var(--card) 72%,transparent);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:1px solid color-mix(in srgb,var(--border) 60%,transparent)}
+@media (max-width:734px){#helpDlg .ld-actions{bottom:-24px;margin:24px -24px -24px;padding:16px 24px 24px}}
 @media (max-width:734px){dialog#helpDlg{padding:24px}.help-t td.calc{display:none}}
 @media (prefers-reduced-motion:reduce){dialog#helpDlg[open]{animation:none}}
 dialog#levDlg{width:min(420px,calc(100% - 32px));padding:32px;border:0;border-radius:var(--r-md);background:var(--card);color:var(--text)}
@@ -577,11 +584,11 @@ $("helpBtn").onclick = () => {
   const row = (k, calc, v, key) => `<tr${key ? ' class="key"' : ""}><th scope="row">${k}</th><td class="calc">${calc}</td><td>${v}</td></tr>`;
   $("helpRows").innerHTML = !a ? row("ยังคำนวณไม่ได้", "", "กรอกค่าให้ครบก่อน") : [
     row("Margin ที่ใส่", "", `${fmt(a.margin)} USDT`, 1),
-    row("Leverage / Liquidation", `${fmt(a.rawLev, 1)}x`, px(a.liq)),
+    row("Liquidation", `ที่ ${fmt(a.rawLev, 1)}x`, px(a.liq)),
     row("ขนาดโพซิชัน", `${fmt(a.margin)} × ${fmt(a.rawLev, 1)}x`, `${fmt(a.notional)} USDT`, 1),
     row("จำนวนเหรียญ", `${fmt(a.notional)} ÷ ${px(a.entry)}`, fmt(a.qty, 6)),
     row("Stop Loss", `${PRESETS[preset].sl * 100}% ของระยะ Entry → Liq`, px(a.sl), 1),
-    row("ถ้าโดน SL เสีย", "รวมค่าธรรมเนียมแล้ว", `${fmt(a.riskAmt)} USDT (${fmt(a.riskAmt / a.margin * 100, 1)}% ของ Margin)`, 1),
+    row("ถ้าโดน SL เสีย", "รวมค่าธรรมเนียมแล้ว", `${fmt(a.riskAmt)} USDT<small>${fmt(a.riskAmt / a.margin * 100, 1)}% ของ Margin</small>`, 1),
     row("กำไรรวมถ้าถึงทุก TP", `R:R 1 : ${fmt(a.total / a.riskAmt)}`, `${fmt(a.total)} USDT`),
   ].join("");
   helpDlg.showModal();
