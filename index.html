@@ -96,15 +96,10 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .plan th:not(:first-child),.plan td:not(:first-child){padding-left:12px}
 .steps{margin:24px 0 0;padding-left:20px;font-size:14px;line-height:1.5;color:var(--text)}
 .steps li{margin-bottom:12px}.steps b{font-weight:600}
-.btn{display:inline-block;margin-top:24px;min-height:44px;padding:12px 24px;border:0;border-radius:var(--r-full);background:var(--primary);color:var(--on-accent);font:400 17px/1 var(--font);cursor:pointer;transition:background-color .2s ease-out}
-.btn:hover{background:var(--primary-hover)}.btn:active{background:var(--primary-active)}
 .hide{display:none}
 .hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--muted)}
 .plan .rr{color:var(--muted);font-size:12px}
-.actions{display:flex;flex-wrap:wrap;gap:16px;margin-top:24px}.actions .btn{margin-top:0;flex:1 1 auto}
-.btn-2{background:transparent;color:var(--accent-text);border:1px solid var(--accent-text)}
 @media (max-width:374px){.row,.res{grid-template-columns:1fr}.stat.big{grid-column:auto}}
-.btn-2:hover{background:var(--primary);color:var(--on-accent)}.btn-2:active{background:var(--primary-active);color:var(--on-accent)}
 @media (forced-colors:active){
   .side button.on{outline:2px solid Highlight;outline-offset:-2px}
   .nav-link.on{border-bottom-color:Highlight}
@@ -223,11 +218,6 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
         <tbody id="aPlan"></tbody>
       </table>
       <ol class="steps" id="aSteps"></ol>
-      <div class="actions">
-        <button type="button" class="btn" id="aCopy">คัดลอกแผน</button>
-        <button type="button" class="btn btn-2" id="aShare">คัดลอกลิงก์แชร์</button>
-        <button type="button" class="btn btn-2" id="aUse">ส่งไปหน้ากำหนดเอง</button>
-      </div>
     </section>
   </div>
 
@@ -456,43 +446,7 @@ function autoCalc() {
   autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps[1].price, lev: Math.min(125, Math.max(1, Math.round(lev))), bal, risk: risk * 100 };
 }
 
-$("aUse").onclick = () => {
-  if (!autoPlan) return;
-  const a = autoPlan;
-  document.querySelector(`#manual .side button[data-side=${a.dir > 0 ? "long" : "short"}]`).click();
-  Object.entries({ balance: a.bal, risk: a.risk, entry: a.entry, sl: +a.sl.toPrecision(8), tp: +a.tp.toPrecision(8), lev: a.lev, levR: a.lev })
-    .forEach(([k, val]) => $(k).value = val);
-  calc();
-  selectTab($("tab-manual"));
-  $("manual").querySelector("h2").focus();
-};
-
-// ---------- คัดลอกแผน / ลิงก์แชร์ ----------
-const flash = (btn, text) => {
-  btn.dataset.orig ??= btn.textContent; // กดซ้ำระหว่างโชว์ "คัดลอกแล้ว" ต้องไม่จำข้อความนั้นเป็นของเดิม
-  clearTimeout(btn._ft);
-  btn.textContent = text;
-  btn._ft = setTimeout(() => { btn.textContent = btn.dataset.orig; delete btn.dataset.orig; }, 1500);
-};
-const copy = async (text, btn) => {
-  try { await navigator.clipboard.writeText(text); flash(btn, "คัดลอกแล้ว ✓"); $("live").textContent = "คัดลอกแล้ว"; }
-  catch { prompt("คัดลอกข้อความนี้", text); }
-};
-$("aCopy").onclick = () => {
-  const a = autoPlan; if (!a) return;
-  copy([
-    `📊 ${a.dir > 0 ? "LONG" : "SHORT"} · ${fmt(a.rawLev, 1)}x Isolated`,
-    `Entry: ${px(a.entry)}`,
-    `SL: ${px(a.sl)} (เสีย ${fmt(a.riskAmt)} USDT)`,
-    ...a.tps.map((t, i) => `TP${i + 1}: ${px(t.price)} (${+t.r.toFixed(2)}R) ปิด ${t.pct * 100}%`),
-    `R:R จริงทั้งไม้: 1 : ${fmt(a.total / a.riskAmt)}`,
-    `Liq: ${px(a.liq)}`,
-    `ขนาด: ${fmt(a.notional)} USDT · Margin ${fmt(a.margin)} USDT`,
-    `ถึง TP1 → เลื่อน SL มาที่ราคาเข้า`,
-  ].join("\n"), $("aCopy"));
-};
 const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, b: $("aBal").value, r: $("aRisk").value, p: preset, rr, d: autoSide });
-$("aShare").onclick = () => copy(location.origin + location.pathname + "?" + new URLSearchParams(state()), $("aShare"));
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
 function save() { try { localStorage.setItem("futures-auto", JSON.stringify(state())); } catch {} }
