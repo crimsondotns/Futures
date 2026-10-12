@@ -309,7 +309,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
             <input id="aLevIn" type="number" inputmode="decimal" autocomplete="off" min="1" max="125" step="any" value="10" aria-label="Leverage (ตัวเลข)">
           </div>
         </div>
-        <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any" aria-describedby="aLiqHint"><span class="hint" id="aLiqHint"></span></label>
+        <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any" placeholder="จากหน้า Exchange" aria-describedby="aLiqHint"><span class="hint" id="aLiqHint">กรอกตามที่ Exchange แสดง — เว็บไม่คำนวณให้</span></label>
       </fieldset>
       <fieldset class="grp">
         <legend>เงินที่ใส่ไม้นี้</legend>
@@ -379,7 +379,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 
 
 </main>
-<footer>Liquidation คำนวณแบบ Isolated Margin โดยประมาณ — ค่าจริงขึ้นกับ Exchange และ tier ของ MMR. ไม่ใช่คำแนะนำการลงทุน</footer>
+<footer>ราคา Liquidation ใช้ตามที่กรอกจาก Exchange · ค่าธรรมเนียมคิด 0.05% ต่อฝั่ง · ไม่ใช่คำแนะนำการลงทุน</footer>
 
 <dialog id="levDlg" aria-labelledby="levDlgT">
   <form method="dialog">
@@ -408,7 +408,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
     <table class="help-t"><tbody id="helpRows"></tbody></table>
     <h3>สูตร</h3>
     <ol class="help-f">
-      <li>ระยะถึง Liq = 1 / Leverage − MMR 0.5%</li>
+      <li>ราคา Liquidation = ค่าที่กรอกจาก Exchange (เว็บไม่คำนวณ เพื่อให้ตรงกับ Exchange)</li>
       <li>Stop Loss วางที่ 40 / 60 / 80% ของระยะ Entry → Liq (ปลอดภัย / สมดุล / ดุดัน)</li>
       <li>ขนาดโพซิชัน = Margin × Leverage · จำนวนเหรียญ = ขนาดโพซิชัน ÷ Entry</li>
       <li>ถ้าโดน SL เสีย = จำนวนเหรียญ × |Entry − SL| + ค่าธรรมเนียม 0.05% × จำนวนเหรียญ × (Entry + SL)</li>
@@ -417,7 +417,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
     <p><b>โดน SL แล้วเสีย Margin หมดไหม?</b> ไม่ — SL วางไว้ก่อน Liquidation เสมอ จึงเสียแค่บางส่วนของ Margin (เช่น 40–80% ตามสไตล์)</p>
     <p><b>เปลี่ยนสไตล์แล้วอะไรเปลี่ยน?</b> สไตล์ยิ่งดุ SL ยิ่งใกล้ Liq — เสียมากขึ้นถ้าโดน SL แต่ราคามีที่แกว่งมากขึ้นก่อนโดน</p>
     <p><b>เพิ่ม Leverage แล้วเป็นยังไง?</b> Margin เท่าเดิมแต่โพซิชันใหญ่ขึ้น Liq ใกล้ขึ้น — กำไรและขาดทุนเป็น USDT มากขึ้นทั้งคู่</p>
-    <p class="help-note">Liquidation เป็นค่าประมาณแบบ Isolated (MMR 0.5%) — ค่าจริงขึ้นกับ Exchange</p>
+    <p class="help-note">ราคา Liquidation ใช้ตามที่กรอกจากหน้า Exchange — เว็บใช้เช็กว่า Stop Loss อยู่ก่อน Liq เท่านั้น</p>
     <div class="ld-actions one"><button class="btn" value="ok">เข้าใจแล้ว</button></div>
   </form>
 </dialog>
@@ -512,25 +512,12 @@ function syncStyleField() { // สไตล์ใช้เฉพาะตอน 
   $("presets").closest("label").hidden = rrTarget !== "custom";
 }
 $("rrPick").onchange = () => { rrTarget = $("rrPick").value; syncStyleField(); autoCalc(); save(); };
-// Leverage → ประมาณ Liquidation ให้ (MMR 0.5%) จนกว่าผู้ใช้จะกรอก Liq จริงจาก Exchange เอง
-// liqManual = ผู้ใช้กรอก Liq เอง → ไม่ทับค่า และไม่ไปเปลี่ยน Leverage
-let liqManual = false;
 const round = (n, d) => +n.toFixed(d);
-function syncLev() {
-  const entry = parseFloat($("aEntry").value), lev = parseFloat($("aLevIn").value), liq = parseFloat($("aLiq").value);
-  const dir = autoSide === "long" ? 1 : -1;
-  // Leverage กับ Liquidation แยกกัน: Liq ที่กรอกเอง (จาก Exchange) ไม่ไปเปลี่ยน Leverage
-  if (liqManual) {
-    $("aLiqHint").textContent = "ใช้ราคาจาก Exchange ที่กรอก · ปรับ Leverage เพื่อประมาณ Liq ใหม่";
-  } else {
-    if (entry > 0 && lev >= 1) $("aLiq").value = round(entry * (1 - dir * (1 / lev - AUTO_MMR)), 8);
-    $("aLiqHint").textContent = "";
-  }
-  refreshLevBtns();
-}
-$("aLevR").oninput = () => { $("aLevIn").value = $("aLevR").value; liqManual = false; syncLev(); autoCalc(); save(); };
-$("aLevIn").oninput = () => { $("aLevR").value = $("aLevIn").value; liqManual = false; syncLev(); autoCalc(); save(); };
-$("aLiq").oninput = () => { liqManual = true; syncLev(); autoCalc(); refreshLevBtns(); };
+// Leverage กับ Liquidation ไม่ผูกกัน: Liq ต้องกรอกจาก Exchange เท่านั้น — เว็บไม่ประมาณให้ (สูตรประมาณไม่ตรงกับ tier MMR จริง)
+function syncLev() { refreshLevBtns(); }
+$("aLevR").oninput = () => { $("aLevIn").value = $("aLevR").value; syncLev(); autoCalc(); save(); };
+$("aLevIn").oninput = () => { $("aLevR").value = $("aLevIn").value; syncLev(); autoCalc(); save(); };
+$("aLiq").oninput = autoCalc;
 $("aEntry").oninput = () => { syncLev(); fillAutoTPs(); autoCalc(); refreshLevBtns(); };
 $("aBal").oninput = autoCalc;
 document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
@@ -607,7 +594,7 @@ function autoCalc() {
   autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps.at(-1).price, lev: Math.min(125, Math.max(1, Math.round(lev))), };
 }
 
-const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, p: preset, n: tpn, tm: tpMode, rt: rrTarget, t: [...document.querySelectorAll("#tpList .tp-in")].map(x => x.value).join(","), d: autoSide });
+const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, b: $("aBal").value, p: preset, n: tpn, tm: tpMode, rt: rrTarget, t: [...document.querySelectorAll("#tpList .tp-in")].map(x => x.value).join(","), d: autoSide });
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
 function save() { try { localStorage.setItem("futures-auto", JSON.stringify(state())); } catch {} }
@@ -624,7 +611,6 @@ function load() {
   if (st.tm === "first" || st.tm === "last") { tpMode = st.tm; pick("#tpMode", document.querySelector(`#tpMode [data-m="${st.tm}"]`)); }
   if (+st.v >= 1) { $("aLevIn").value = st.v; $("aLevR").value = Math.round(st.v); }
   // ข้อมูลเก่า (ก่อนมี Leverage) มีแต่ Liq → ถือว่ากรอกเอง
-  liqManual = st.m != null ? st.m == 1 : !!st.l;
 }
 ["aEntry", "aLiq", "aBal"].forEach(id => $(id).addEventListener("input", save));
 
@@ -653,7 +639,7 @@ $("helpBtn").onclick = () => {
   const row = (k, calc, v, key) => `<tr${key ? ' class="key"' : ""}><th scope="row">${k}</th><td class="calc">${calc}</td><td>${v}</td></tr>`;
   $("helpRows").innerHTML = !a ? row("ยังคำนวณไม่ได้", "", "กรอกค่าให้ครบก่อน") : [
     row("Margin ที่ใส่", "", `${fmt(a.margin)} USDT`, 1),
-    row("Liquidation", `ที่ ${fmt(a.rawLev, 1)}x`, px(a.liq)),
+    row("Liquidation", "จาก Exchange", px(a.liq)),
     row("ขนาดโพซิชัน", `${fmt(a.margin)} × ${fmt(a.rawLev, 1)}x`, `${fmt(a.notional)} USDT`, 1),
     row("จำนวนเหรียญ", `${fmt(a.notional)} ÷ ${px(a.entry)}`, fmt(a.qty, 6)),
     row("Stop Loss", `${PRESETS[preset].sl * 100}% ของระยะ Entry → Liq`, px(a.sl), 1),
@@ -692,8 +678,8 @@ const dlg = $("levDlg");
 let ldTarget = null, ldDraft = 10;
 const levInfo = {
   aLevIn: l => {
-    const e = parseFloat($("aEntry").value), dir = autoSide === "long" ? 1 : -1;
-    return e > 0 ? `Liquidation ≈ <b>${px(e * (1 - dir * (1 / l - AUTO_MMR)))}</b> (ห่างจาก Entry ${fmt((1 / l - AUTO_MMR) * 100)}%)` : "";
+    const m = parseFloat($("aBal").value);
+    return m > 0 ? `ขนาดโพซิชัน = ${fmt(m)} × ${l}x = <b>${fmt(m * l)} USDT</b> · ราคา Liquidation ให้ดูจากหน้า Exchange` : "";
   },
 };
 function ldUpdate() {
