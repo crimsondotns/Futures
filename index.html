@@ -97,6 +97,12 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .steps{margin:24px 0 0;padding-left:20px;font-size:14px;line-height:1.5;color:var(--text)}
 .steps li{margin-bottom:12px}.steps b{font-weight:600}
 .hide{display:none}
+/* ราคาในตาราง TP: คลิกเพื่อคัดลอก */
+.copy{position:relative;margin:-4px -8px;padding:4px 8px;border:0;border-radius:var(--r-sm);background:transparent;color:inherit;font:inherit;font-variant-numeric:tabular-nums;cursor:copy;transition:background-color .2s ease-out}
+.copy:hover{background:var(--fill)}
+.copy.done{background:color-mix(in srgb,var(--long) 16%,transparent)}
+.copy.done::after{content:"คัดลอกแล้ว";position:absolute;left:50%;bottom:calc(100% + 4px);transform:translateX(-50%);padding:4px 8px;border-radius:var(--r-sm);
+  background:var(--text);color:var(--card);font-size:12px;line-height:1.5;letter-spacing:0.01em;white-space:nowrap;pointer-events:none}
 [hidden]{display:none!important}
 /* ---- Leverage: ปุ่มเปิด dialog + dialog พื้นหลังเบลอ ---- */
 .lev-btn{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
@@ -358,6 +364,8 @@ const fmt = (n, d = 2) => isFinite(n)
 // ประกาศผลสรุปให้ screen reader หลังหยุดพิมพ์
 let liveT;
 const announce = text => { clearTimeout(liveT); liveT = setTimeout(() => $("live").textContent = text, 600); };
+// ตัวเลขดิบสำหรับวางในช่องราคาของ Exchange (ไม่มีคอมมา, ทศนิยมเท่าที่แสดง)
+const raw = n => String(+n.toFixed(n >= 100 ? 2 : n >= 1 ? 4 : 6));
 const px = n => fmt(n, n >= 100 ? 2 : n >= 1 ? 4 : 6);
 
 document.querySelectorAll("#manual .side button").forEach(b => b.onclick = () => {
@@ -523,7 +531,7 @@ function autoCalc() {
   $("aProfit").textContent = "+" + fmt(total) + " USDT";
   $("aRR").textContent = "1 : " + fmt(total / riskAmt);
   $("aPlan").innerHTML = tps.map((t, i) =>
-    `<tr><th scope="row">TP${i + 1}</th><td>${px(t.price)}</td><td>${+t.r.toFixed(2)}R</td><td>${t.pct * 100}%</td><td class="pos">+${fmt(t.profit)} <span class="rr">(${fmt(t.profit / riskAmt)}R)</span></td></tr>`).join("");
+    `<tr><th scope="row">TP${i + 1}</th><td><button type="button" class="copy" data-v="${raw(t.price)}" aria-label="คัดลอกราคา TP${i + 1} ${px(t.price)}">${px(t.price)}</button></td><td>${+t.r.toFixed(2)}R</td><td>${t.pct * 100}%</td><td class="pos">+${fmt(t.profit)} <span class="rr">(${fmt(t.profit / riskAmt)}R)</span></td></tr>`).join("");
   $("aSteps").innerHTML = [
     `เปิด <b>${dir > 0 ? "LONG" : "SHORT"}</b> ที่ <b>${px(entry)}</b> ขนาด <b>${fmt(notional)} USDT</b> (${fmt(lev, 1)}x, Isolated)`,
     `ตั้ง Stop Loss ที่ <b>${px(sl)}</b> ทันทีหลังเข้า — เสียไม่เกิน ${fmt(riskAmt)} USDT`,
@@ -560,6 +568,24 @@ function load() {
 load();
 syncLev();
 autoCalc();
+
+// ---- คลิกราคาในตาราง TP เพื่อคัดลอก ----
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch {
+    const ta = Object.assign(document.createElement("textarea"), { value: t }); // fallback สำหรับเบราว์เซอร์ที่ไม่ให้ใช้ clipboard API
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.append(ta); ta.select();
+    const ok = document.execCommand("copy"); ta.remove(); return ok;
+  }
+}
+$("aPlan").addEventListener("click", async e => {
+  const b = e.target.closest(".copy"); if (!b) return;
+  if (!(await copyText(b.dataset.v))) return;
+  document.querySelectorAll(".copy.done").forEach(x => x.classList.remove("done"));
+  b.classList.add("done"); $("live").textContent = `คัดลอก ${b.dataset.v} แล้ว`;
+  clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove("done"), 1200);
+});
+
 
 // ---- Leverage dialog: ใช้ร่วมกันทั้ง 2 โหมด — แก้ค่าใน <input> เดิมแล้วยิง input event ----
 const dlg = $("levDlg");
