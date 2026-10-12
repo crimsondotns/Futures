@@ -630,6 +630,11 @@ function load() {
 }
 ["aEntry", "aLiq", "aBal"].forEach(id => $(id).addEventListener("input", save));
 
+// กด Enter ในช่องกรอก = เสร็จแล้ว → ออกจากช่อง (ปิดคีย์บอร์ดบนมือถือด้วย)
+document.addEventListener("keydown", e => {
+  const t = e.target;
+  if (e.key === "Enter" && !e.isComposing && t.matches?.("input:not([type=range]):not([readonly])")) { e.preventDefault(); t.blur(); }
+});
 // ล้อเมาส์บนช่องตัวเลขที่โฟกัสอยู่ = เบราว์เซอร์เปลี่ยนค่าเอง → blur ก่อน ให้หน้าเลื่อนตามปกติแทน
 document.addEventListener("wheel", e => {
   const t = e.target;
