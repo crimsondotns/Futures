@@ -38,11 +38,6 @@ body{margin:0;background:var(--bg);color:var(--text);font:400 17px/1.5 var(--fon
   font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--text)}
 .nav-in{max-width:980px;min-height:44px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .nav-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nav-tabs{display:flex;gap:4px;align-self:stretch;flex-shrink:0}
-.nav-link{min-height:44px;padding:0 12px;border:0;border-bottom:2px solid transparent;background:none;color:var(--text);font:400 12px/1.5 var(--font);letter-spacing:0.01em;opacity:.72;cursor:pointer;transition:opacity .2s ease-out}
-.nav-link:hover{opacity:.8}
-.nav-link.on{opacity:1;border-bottom-color:var(--text)}
-.nav-link:focus-visible{outline:2px solid var(--primary);outline-offset:-4px;border-radius:var(--r-sm)}
 select{display:block;width:100%;margin-top:8px;padding:12px 40px 12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
   background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2386868b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center;
   color:var(--text);font:400 17px/1.4 var(--font);appearance:none;-webkit-appearance:none;cursor:pointer;transition:border-color .2s ease-out}
@@ -53,7 +48,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 main:focus{outline:none}
 h1{font:600 56px/1.25 var(--display);letter-spacing:normal;margin:0 0 12px;text-align:center}
 .sub{color:var(--muted);margin:0 auto 48px;font-size:21px;line-height:1.3;text-align:center;max-width:640px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 .card{background:var(--card);border-radius:var(--r-md);padding:32px}
 .card h2{font:600 21px/1.3 var(--font);margin:0 0 24px}
 .side{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;margin-bottom:24px;background:var(--bg);border-radius:var(--r-full)}
@@ -62,7 +56,6 @@ h1{font:600 56px/1.25 var(--display);letter-spacing:normal;margin:0 0 12px;text-
 .side button.on:not([data-side]){background:var(--card);color:var(--text)}
 .side button.on[data-side=long]{background:var(--long);color:var(--on-signal)}
 .side button.on[data-side=short]{background:var(--short);color:var(--on-signal)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 label{display:block;font-size:14px;line-height:1.5;color:var(--muted);margin-bottom:24px}
 input{display:block;width:100%;margin-top:8px;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
   background:var(--card);color:var(--text);font:400 17px/1.4 var(--font);font-variant-numeric:tabular-nums;
@@ -83,9 +76,9 @@ input[type=range]{min-height:44px;padding:0;border:0;margin-top:0;accent-color:v
 footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);font-size:12px;line-height:1.5;letter-spacing:0.01em;text-align:center}
 @media (max-width:734px){
   h1{font-size:44px}.sub{font-size:17px;margin-bottom:32px}
-  .grid{grid-template-columns:1fr}.card{padding:24px}
+  .card{padding:24px}
   .stat.big .v{font-size:28px;letter-spacing:normal}
-  .nav-link{padding:0 8px}.wrap{padding:32px 16px}footer{padding-bottom:48px}
+  .wrap{padding:32px 16px}footer{padding-bottom:48px}
 }
 .preset{margin-bottom:24px}
 .plan{width:100%;border-collapse:collapse;font-size:14px;line-height:1.5;margin-top:8px}
@@ -148,10 +141,9 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 @media (prefers-reduced-motion:reduce){dialog#levDlg[open]{animation:none}}
 .hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--muted)}
 .plan .rr{color:var(--muted);font-size:12px}
-@media (max-width:374px){.row,.res{grid-template-columns:1fr}.stat.big{grid-column:auto}}
+@media (max-width:374px){.res{grid-template-columns:1fr}.stat.big{grid-column:auto}}
 @media (forced-colors:active){
   .side button.on{outline:2px solid Highlight;outline-offset:-2px}
-  .nav-link.on{border-bottom-color:Highlight}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
@@ -205,18 +197,14 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 </head>
 <body>
 <a class="skip" href="#main">ข้ามไปเนื้อหา</a>
-<nav class="nav" aria-label="โหมดการคำนวณ"><div class="nav-in">
+<nav class="nav" aria-label="หัวเว็บ"><div class="nav-in">
   <span class="nav-title">Futures Trade Calculator</span>
-  <div class="nav-tabs" id="tabs" role="tablist" aria-label="โหมดการคำนวณ">
-    <button type="button" class="nav-link on" data-tab="auto" id="tab-auto" role="tab" aria-selected="true" aria-controls="auto">อัตโนมัติ</button>
-    <button type="button" class="nav-link" data-tab="manual" id="tab-manual" role="tab" aria-selected="false" aria-controls="manual" tabindex="-1">กำหนดเอง</button>
-  </div>
 </div></nav>
 <main class="wrap" id="main" tabindex="-1">
   <h1>คำนวณก่อนเทรด</h1>
   <p class="sub">คำนวณขนาดโพซิชัน, Margin, ราคา Liquidation, กำไร/ขาดทุน และ Risk:Reward สำหรับ USDT-M Futures</p>
 
-  <div class="ticket" id="auto" role="tabpanel" aria-labelledby="tab-auto">
+  <div class="ticket" id="auto">
     <section class="card ticket-in">
       <h2>ออเดอร์</h2>
       <div class="side" id="aDir" role="group" aria-label="ฝั่ง">
@@ -287,55 +275,6 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
     </section>
   </div>
 
-  <div class="grid hide" id="manual" role="tabpanel" aria-labelledby="tab-manual">
-    <section class="card">
-      <h2 tabindex="-1">ข้อมูลเทรด</h2>
-      <div class="side" role="group" aria-label="ฝั่ง">
-        <button type="button" data-side="long" class="on">LONG</button>
-        <button type="button" data-side="short">SHORT</button>
-      </div>
-      <div class="row">
-        <label>ทุนในบัญชี (USDT)<input id="balance" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any"></label>
-        <label>ความเสี่ยงต่อไม้ (%)<input id="risk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any" aria-describedby="riskHint"><span class="hint" id="riskHint"></span></label>
-      </div>
-      <div class="row">
-        <label>ราคาเข้า (Entry)<input id="entry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
-        <label>Stop Loss<input id="sl" type="number" inputmode="decimal" autocomplete="off" value="59000" min="0" step="any"></label>
-      </div>
-      <div class="row">
-        <label>Take Profit<input id="tp" type="number" inputmode="decimal" autocomplete="off" value="63000" min="0" step="any"></label>
-        <label>ค่าธรรมเนียม/ฝั่ง (%)<input id="fee" type="number" inputmode="decimal" autocomplete="off" value="0.05" min="0" step="any"></label>
-      </div>
-      <div class="lev-wrap">
-        <span class="lbl" id="levLbl">Leverage</span>
-        <button type="button" class="lev-btn" data-lev="lev" aria-haspopup="dialog" aria-labelledby="levLbl lev-btn" id="lev-btn">10x</button>
-        <div class="lev" hidden>
-          <input id="levR" type="range" min="1" max="125" value="10" aria-labelledby="levLbl">
-          <input id="lev" type="number" inputmode="decimal" autocomplete="off" min="1" max="125" value="10" aria-label="Leverage (ตัวเลข)" aria-describedby="levHint">
-        </div>
-        <span class="hint" id="levHint"></span>
-      </div>
-      <label>Maintenance Margin Rate (%)<input id="mmr" type="number" inputmode="decimal" autocomplete="off" value="0.5" min="0" step="any"></label>
-      <div class="msg" id="msg" role="status"></div>
-    </section>
-
-    <section class="card">
-      <h2>ผลลัพธ์</h2>
-      <div class="res">
-        <div class="stat big"><div class="k">ขนาดโพซิชัน (Notional)</div><div class="v" id="oNotional">–</div></div>
-        <div class="stat"><div class="k">จำนวนเหรียญ (Qty)</div><div class="v" id="oQty">–</div></div>
-        <div class="stat"><div class="k">Margin ที่ใช้</div><div class="v" id="oMargin">–</div></div>
-        <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="oLoss">–</div></div>
-        <div class="stat"><div class="k">กำไรถ้าถึง TP</div><div class="v pos" id="oProfit">–</div></div>
-        <div class="stat"><div class="k">Risk : Reward</div><div class="v" id="oRR">–</div></div>
-        <div class="stat"><div class="k">ROE ที่ TP</div><div class="v" id="oROE">–</div></div>
-        <div class="stat"><div class="k">ราคา Liquidation (ประมาณ)</div><div class="v warn" id="oLiq">–</div></div>
-        <div class="stat"><div class="k">ค่าธรรมเนียมรวม</div><div class="v" id="oFee">–</div></div>
-        <div class="stat"><div class="k">ระยะ SL</div><div class="v" id="oSLd">–</div></div>
-        <div class="stat"><div class="k">Break-even</div><div class="v" id="oBE">–</div></div>
-      </div>
-    </section>
-  </div>
 
 </main>
 <footer>Liquidation คำนวณแบบ Isolated Margin โดยประมาณ — ค่าจริงขึ้นกับ Exchange และ tier ของ MMR. ไม่ใช่คำแนะนำการลงทุน</footer>
@@ -363,7 +302,6 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 
 <script>
 const $ = id => document.getElementById(id);
-let side = "long";
 document.querySelectorAll(".side button").forEach(b => b.setAttribute("aria-pressed", b.classList.contains("on")));
 // cache formatter ต่อจำนวนทศนิยม — toLocaleString สร้างใหม่ทุกครั้ง (ช้ากว่า ~50 เท่า)
 const NF = {};
@@ -377,60 +315,6 @@ const announce = text => { clearTimeout(liveT); liveT = setTimeout(() => $("live
 const raw = n => String(+n.toFixed(n >= 100 ? 2 : n >= 1 ? 4 : 6));
 const px = n => fmt(n, n >= 100 ? 2 : n >= 1 ? 4 : 6);
 
-document.querySelectorAll("#manual .side button").forEach(b => b.onclick = () => {
-  side = b.dataset.side;
-  document.querySelectorAll("#manual .side button").forEach(x => (x.classList.toggle("on", x === b), x.setAttribute("aria-pressed", x === b)));
-  calc();
-});
-$("levR").oninput = () => { $("lev").value = $("levR").value; calc(); };
-$("lev").oninput = () => { $("levR").value = $("lev").value; calc(); refreshLevBtns(); };
-document.querySelectorAll("#manual input:not(#levR):not(#lev)").forEach(i => i.oninput = calc);
-
-function calc() {
-  const v = id => parseFloat($(id).value);
-  const bal = v("balance"), risk = v("risk") / 100, entry = v("entry"), sl = v("sl"),
-        tp = v("tp"), fee = v("fee") / 100, lev = v("lev"), mmr = v("mmr") / 100;
-  const dir = side === "long" ? 1 : -1;
-  $("riskHint").textContent = bal > 0 && risk > 0 ? `= เสียไม่เกิน ${fmt(bal * risk)} USDT ถ้าโดน SL (ไม่เกี่ยวกับ Leverage)` : "";
-  $("levHint").textContent = "Leverage ไม่เปลี่ยนเงินที่เสียตอนโดน SL — เปลี่ยนแค่ Margin ที่ต้องวาง และระยะถึง Liquidation";
-  const out = ["oNotional","oQty","oMargin","oLoss","oProfit","oRR","oROE","oLiq","oFee","oSLd","oBE"];
-  const reset = m => { out.forEach(o => $(o).textContent = "–"); $("msg").textContent = m; };
-
-  if (![bal, risk, entry, sl, lev].every(n => n > 0)) return reset("กรอกทุน, ความเสี่ยง, Entry, SL และ Leverage ให้ครบ");
-  if ((entry - sl) * dir <= 0) return reset(side === "long" ? "LONG: Stop Loss ต้องต่ำกว่าราคาเข้า" : "SHORT: Stop Loss ต้องสูงกว่าราคาเข้า");
-  const hasTP = tp > 0 && (tp - entry) * dir > 0;
-
-  // จำนวนเหรียญที่ทำให้ขาดทุน (รวมค่าธรรมเนียมเข้า+ออก) = ความเสี่ยงที่กำหนด
-  const riskAmt = bal * risk;
-  const qty = riskAmt / (Math.abs(entry - sl) + fee * (entry + sl));
-  const notional = qty * entry;
-  const margin = notional / lev;
-  const liq = entry * (1 - dir / lev + dir * mmr);
-  const feeTP = hasTP ? fee * qty * (entry + tp) : NaN;
-  const profit = hasTP ? qty * Math.abs(tp - entry) - feeTP : NaN;
-  const be = entry * (1 + dir * 2 * fee);
-
-  $("oNotional").textContent = fmt(notional) + " USDT";
-  $("oQty").textContent = fmt(qty, 6);
-  $("oMargin").textContent = fmt(margin) + " USDT";
-  $("levHint").textContent = `${fmt(lev, 0)}x → วาง Margin ${fmt(margin)} USDT · เงินที่เสียตอนโดน SL ยังเท่าเดิม (${fmt(riskAmt)} USDT)`;
-  $("oLoss").textContent = "-" + fmt(riskAmt) + " USDT";
-  $("oProfit").textContent = hasTP ? "+" + fmt(profit) + " USDT" : "–";
-  $("oRR").textContent = hasTP ? "1 : " + fmt(profit / riskAmt) : "–";
-  $("oROE").textContent = hasTP ? fmt(profit / margin * 100) + "%" : "–";
-  $("oLiq").textContent = liq > 0 ? px(liq) : "ไม่มี";
-  $("oFee").textContent = fmt(hasTP ? feeTP : fee * qty * (entry + sl), 4) + " USDT";
-  $("oSLd").textContent = fmt(Math.abs(entry - sl) / entry * 100) + "%";
-  $("oBE").textContent = px(be);
-
-  const msgs = [];
-  if (margin > bal) msgs.push("Margin เกินทุนในบัญชี — เพิ่ม Leverage หรือลดความเสี่ยง");
-  if ((sl - liq) * dir <= 0) msgs.push("ราคา Liquidation อยู่ก่อน Stop Loss — จะโดน Liq ก่อนถึง SL");
-  if (tp > 0 && !hasTP) msgs.push("Take Profit อยู่ผิดฝั่งของราคาเข้า");
-  $("msg").textContent = msgs.join(" · ");
-  announce(`${side.toUpperCase()} ขนาด ${fmt(notional)} USDT, Margin ${fmt(margin)} USDT, ขาดทุนถ้าโดน SL ${fmt(riskAmt)} USDT`);
-}
-calc();
 
 // ---------- Auto mode ----------
 const PRESETS = {
@@ -445,25 +329,6 @@ let tpn = 3;
 let preset = "bal", rr = 3, autoSide = "long", autoPlan = null;
 const pick = (group, b) => document.querySelectorAll(group + " button").forEach(x => (x.classList.toggle("on", x === b), x.setAttribute("aria-pressed", x === b)));
 
-const tabs = [...document.querySelectorAll("#tabs [role=tab]")];
-function selectTab(b) {
-  tabs.forEach(x => {
-    const on = x === b;
-    x.classList.toggle("on", on);
-    x.setAttribute("aria-selected", on);
-    x.tabIndex = on ? 0 : -1;
-    $(x.dataset.tab).classList.toggle("hide", !on);
-  });
-}
-tabs.forEach((b, i) => {
-  b.onclick = () => selectTab(b);
-  b.onkeydown = e => {
-    const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
-    if (!k) return;
-    const n = tabs[(i + k + tabs.length) % tabs.length];
-    selectTab(n); n.focus(); e.preventDefault();
-  };
-});
 
 $("presets").onchange = () => {
   preset = $("presets").value;
@@ -613,10 +478,6 @@ const levInfo = {
   aLevIn: l => {
     const e = parseFloat($("aEntry").value), dir = autoSide === "long" ? 1 : -1;
     return e > 0 ? `Liquidation ≈ <b>${px(e * (1 - dir * (1 / l - AUTO_MMR)))}</b> (ห่างจาก Entry ${fmt((1 / l - AUTO_MMR) * 100)}%)` : "";
-  },
-  lev: l => {
-    const e = parseFloat($("entry").value), m = parseFloat($("mmr").value) / 100 || 0, dir = side === "long" ? 1 : -1;
-    return e > 0 ? `Liquidation ≈ <b>${px(e * (1 - dir / l + dir * m))}</b> (ห่างจาก Entry ${fmt((1 / l - m) * 100)}%)` : "";
   },
 };
 function ldUpdate() {
