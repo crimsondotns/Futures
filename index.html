@@ -80,7 +80,6 @@ footer{margin-top:48px;color:var(--muted);font-size:12px;line-height:1.5;text-al
 .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.actions .btn{margin-top:0}
 .btn-2{background:transparent;color:var(--primary);border:1px solid var(--primary)}
 .btn-2:hover{background:var(--primary);color:var(--on-accent)}.btn-2:active{background:var(--primary-active);color:var(--on-accent)}
-input[type=text]{text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -98,7 +97,6 @@ input[type=text]{text-transform:uppercase}
    <div class="grid" id="auto">
     <section class="card">
       <h2>กรอกแค่ 2 ค่า</h2>
-      <label>เหรียญ (ไว้แสดงในแผนที่คัดลอก)<input id="aSym" type="text" value="BTCUSDT" autocomplete="off" spellcheck="false"></label>
       <div class="row">
         <label>ราคาเข้า (Entry)<input id="aEntry" type="number" value="60000" min="0" step="any"></label>
         <label>ราคา Liquidation<input id="aLiq" type="number" value="54300" min="0" step="any"></label>
@@ -359,9 +357,8 @@ const copy = async (text, btn) => {
 };
 $("aCopy").onclick = () => {
   const a = autoPlan; if (!a) return;
-  const sym = $("aSym").value.trim().toUpperCase();
   copy([
-    `📊 ${sym} ${a.dir > 0 ? "LONG" : "SHORT"} · ${fmt(a.rawLev, 1)}x Isolated`,
+    `📊 ${a.dir > 0 ? "LONG" : "SHORT"} · ${fmt(a.rawLev, 1)}x Isolated`,
     `Entry: ${px(a.entry)}`,
     `SL: ${px(a.sl)} (เสีย ${fmt(a.riskAmt)} USDT)`,
     ...a.tps.map((t, i) => `TP${i + 1}: ${px(t.price)} (1:${t.r}) ปิด ${t.pct * 100}%`),
@@ -370,7 +367,7 @@ $("aCopy").onclick = () => {
     `ถึง TP1 → เลื่อน SL มาที่ราคาเข้า`,
   ].join("\n"), $("aCopy"));
 };
-const state = () => ({ s: $("aSym").value.trim().toUpperCase(), e: $("aEntry").value, l: $("aLiq").value, b: $("aBal").value, r: $("aRisk").value, p: preset, rr });
+const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, b: $("aBal").value, r: $("aRisk").value, p: preset, rr });
 $("aShare").onclick = () => copy(location.origin + location.pathname + "?" + new URLSearchParams(state()), $("aShare"));
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
@@ -378,12 +375,12 @@ function save() { try { localStorage.setItem("futures-auto", JSON.stringify(stat
 function load() {
   let st = Object.fromEntries(new URLSearchParams(location.search));
   if (!st.e) try { st = JSON.parse(localStorage.getItem("futures-auto")) || {}; } catch { st = {}; }
-  [["s", "aSym"], ["e", "aEntry"], ["l", "aLiq"], ["b", "aBal"], ["r", "aRisk"]].forEach(([k, id]) => { if (st[k]) $(id).value = st[k]; });
+  [["e", "aEntry"], ["l", "aLiq"], ["b", "aBal"], ["r", "aRisk"]].forEach(([k, id]) => { if (st[k]) $(id).value = st[k]; });
   if (PRESETS[st.p]) { preset = st.p; pick("#presets", document.querySelector(`#presets button[data-p="${preset}"]`)); }
   const rb = document.querySelector(`#rrs button[data-rr="${st.rr}"]`);
   if (rb) { rr = +st.rr; pick("#rrs", rb); }
 }
-["aSym", "aEntry", "aLiq", "aBal", "aRisk"].forEach(id => $(id).addEventListener("input", save));
+["aEntry", "aLiq", "aBal", "aRisk"].forEach(id => $(id).addEventListener("input", save));
 document.querySelectorAll("#presets button, #rrs button").forEach(b => b.addEventListener("click", save));
 
 load();
