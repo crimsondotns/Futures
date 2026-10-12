@@ -177,6 +177,11 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 @media (prefers-reduced-motion:reduce){dialog#levDlg[open]{animation:none}}
 .hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;color:var(--muted)}
 .plan .rr{color:var(--muted);font-size:12px}
+/* chip สถานะ R:R ขั้นต่ำ */
+.chip-rr{display:inline-block;vertical-align:middle;margin-left:8px;padding:0 8px;border-radius:var(--r-full);font:600 12px/20px var(--font);
+  background:color-mix(in srgb,var(--long) 14%,transparent);color:var(--long)}
+.chip-rr.bad{background:color-mix(in srgb,var(--short) 14%,transparent);color:var(--short)}
+@media (forced-colors:active){.chip-rr{border:1px solid CanvasText}}
 /* ราคา TP ที่ผู้ใช้กรอกเอง */
 .tp-box{margin-bottom:24px}
 .tp-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -378,7 +383,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
         <div class="stat"><div class="k">จำนวนเหรียญ</div><div class="v" id="aQty">–</div></div>
         <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="aLoss">–</div></div>
         <div class="stat"><div class="k">กำไรรวม (ถ้าถึงทุก TP)</div><div class="v pos" id="aProfit">–</div></div>
-        <div class="stat wide" id="rrStat"><div class="k">R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม)</div><div class="v" id="aRR">–</div></div>
+        <div class="stat wide" id="rrStat"><div class="k">R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม)</div><div class="v"><span id="aRR">–</span> <span class="chip-rr" id="rrChip" hidden></span></div></div>
       </div>
       <div class="ladder" id="aLadder" aria-hidden="true"></div>
       <table class="plan">
@@ -459,6 +464,7 @@ const PRESETS = {
   agg:  { sl: 0.8, split: [0.4, 0.3, 0.3] },
 };
 const AUTO_FEE = 0.0005, AUTO_MMR = 0.005;
+const MIN_RR = 1.5; // R:R จริงทั้งไม้ขั้นต่ำที่ยอมรับ
 // สัดส่วนปิดต่อจำนวน TP (3 TP ใช้ของสไตล์แผนเทรด)
 const SPLITS = { 1: [1], 2: [0.5, 0.5], 4: [0.4, 0.3, 0.2, 0.1], 5: [0.3, 0.25, 0.2, 0.15, 0.1] };
 let tpn = 3;
@@ -546,7 +552,7 @@ function autoCalc() {
   const v = id => parseFloat($(id).value);
   const entry = v("aEntry"), liq = v("aLiq"), margin = v("aBal");
   const ids = ["aRR","aSL","aBuf","aNotional","aSlPct","aQty","aLoss","aProfit"];
-  const reset = m => { ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
+  const reset = m => { $("rrChip").hidden = true; ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
   $("aMgnHint").textContent = "";
   if (![entry, liq, margin].every(n => n > 0)) return reset("กรอก Entry, Liquidation และ Margin ให้ครบ");
   if (entry === liq) return reset("Liquidation ต้องไม่เท่ากับราคาเข้า");
@@ -581,7 +587,10 @@ function autoCalc() {
   $("aQty").textContent = fmt(qty, 6);
   $("aLoss").textContent = `-${fmt(riskAmt)} USDT (${fmt(riskAmt / margin * 100, 1)}%)`;
   $("aProfit").textContent = "+" + fmt(total) + " USDT";
-  $("aRR").textContent = "1 : " + fmt(total / riskAmt);
+  const rrv = total / riskAmt, rrOk = rrv >= MIN_RR;
+  $("aRR").textContent = "1 : " + fmt(rrv);
+  Object.assign($("rrChip"), { hidden: false, textContent: rrOk ? `ผ่าน ≥ ${MIN_RR}` : `ต่ำกว่า ${MIN_RR}` });
+  $("rrChip").classList.toggle("bad", !rrOk);
   $("aPlan").innerHTML = tps.map((t, i) =>
     `<tr><th scope="row">TP${i + 1}</th><td><button type="button" class="copy" data-v="${raw(t.price)}" aria-label="คัดลอกราคา TP${i + 1} ${px(t.price)}">${px(t.price)}</button></td><td>${+t.r.toFixed(2)}R</td><td>${+(t.pct * 100).toFixed(0)}%</td><td class="pos">+${fmt(t.profit)} <span class="rr">(${fmt(t.profit / riskAmt)}R)</span></td></tr>`).join("");
   $("aSteps").innerHTML = [
@@ -596,6 +605,7 @@ function autoCalc() {
   ].map(x => `<li>${x}</li>`).join("");
 
   const msgs = [];
+  if (!rrOk) msgs.push(`R:R ทั้งไม้ 1 : ${fmt(rrv)} ต่ำกว่าขั้นต่ำ 1 : ${MIN_RR} — ขยับ TP ให้ไกลขึ้น หรือเพิ่มสัดส่วนปิดที่ TP หลัง`);
   if (lev > 50) msgs.push("Leverage สูงมาก — ราคาแกว่งนิดเดียวก็โดน SL");
   $("aMsg").textContent = msgs.join(" · ");
   announce(`${dir > 0 ? "LONG" : "SHORT"} ${fmt(lev, 1)}x, ขนาด ${fmt(notional)} USDT, Stop Loss ${px(sl)}, TP สุดท้าย ${px(tps.at(-1).price)}`);
