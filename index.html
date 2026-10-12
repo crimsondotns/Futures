@@ -43,6 +43,10 @@ body{margin:0;background:var(--bg);color:var(--text);font:400 17px/1.5 var(--fon
 .nav-link:hover{opacity:.8}
 .nav-link.on{opacity:1;border-bottom-color:var(--text)}
 .nav-link:focus-visible{outline:2px solid var(--primary);outline-offset:-4px;border-radius:var(--r-sm)}
+select{display:block;width:100%;margin-top:8px;padding:12px 40px 12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
+  background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2386868b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center;
+  color:var(--text);font:400 17px/1.4 var(--font);appearance:none;-webkit-appearance:none;cursor:pointer;transition:border-color .2s ease-out}
+select:focus-visible{border-color:var(--primary);outline:2px solid var(--primary);outline-offset:3px}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .wrap{max-width:980px;margin:0 auto;padding:48px 16px}
@@ -95,6 +99,7 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .btn{display:inline-block;margin-top:24px;min-height:44px;padding:12px 24px;border:0;border-radius:var(--r-full);background:var(--primary);color:var(--on-accent);font:400 17px/1 var(--font);cursor:pointer;transition:background-color .2s ease-out}
 .btn:hover{background:var(--primary-hover)}.btn:active{background:var(--primary-active)}
 .hide{display:none}
+.plan .rr{color:var(--muted);font-size:12px}
 .actions{display:flex;flex-wrap:wrap;gap:16px;margin-top:24px}.actions .btn{margin-top:0;flex:1 1 auto}
 .btn-2{background:transparent;color:var(--accent-text);border:1px solid var(--accent-text)}
 @media (max-width:374px){.row,.res{grid-template-columns:1fr}.stat.big{grid-column:auto}}
@@ -121,7 +126,11 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 
   <div class="grid" id="auto" role="tabpanel" aria-labelledby="tab-auto">
     <section class="card">
-      <h2>กรอกแค่ 2 ค่า</h2>
+      <h2>เลือกฝั่ง แล้วกรอก 2 ค่า</h2>
+      <div class="side" id="aDir" role="group" aria-label="ฝั่ง">
+        <button type="button" data-side="long" class="on">LONG</button>
+        <button type="button" data-side="short">SHORT</button>
+      </div>
       <div class="row">
         <label>ราคาเข้า (Entry)<input id="aEntry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
         <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any"></label>
@@ -130,18 +139,22 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
         <label>ทุนในบัญชี (USDT)<input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any"></label>
         <label>ความเสี่ยงต่อไม้ (%)<input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any"></label>
       </div>
-      <span class="lbl" id="presetsLbl">สไตล์แผนเทรด</span>
-      <div class="side preset" id="presets" role="group" aria-labelledby="presetsLbl">
-        <button type="button" data-p="safe">ปลอดภัย</button>
-        <button type="button" data-p="bal" class="on">สมดุล</button>
-        <button type="button" data-p="agg">ดุดัน</button>
-      </div>
-      <span class="lbl" id="rrsLbl">เป้า R:R สุดท้าย (TP3)</span>
-      <div class="side preset" id="rrs" role="group" aria-labelledby="rrsLbl">
-        <button type="button" data-rr="1.5">1:1.5</button>
-        <button type="button" data-rr="2">1:2</button>
-        <button type="button" data-rr="3" class="on">1:3</button>
-        <button type="button" data-rr="5">1:5</button>
+      <div class="row">
+      <label>สไตล์แผนเทรด
+        <select id="presets">
+          <option value="safe">ปลอดภัย — SL 40% ของระยะถึง Liq</option>
+          <option value="bal" selected>สมดุล — SL 60% ของระยะถึง Liq</option>
+          <option value="agg">ดุดัน — SL 80% ของระยะถึง Liq</option>
+        </select>
+      </label>
+      <label>ระยะ TP สุดท้าย (TP3)
+        <select id="rrs">
+          <option value="1.5">1.5R — ไกล 1.5 เท่าของระยะ SL</option>
+          <option value="2">2R — ไกล 2 เท่าของระยะ SL</option>
+          <option value="3" selected>3R — ไกล 3 เท่าของระยะ SL</option>
+          <option value="5">5R — ไกล 5 เท่าของระยะ SL</option>
+        </select>
+      </label>
       </div>
       <div class="res">
         <div class="stat"><div class="k">ฝั่ง</div><div class="v" id="aSide">–</div></div>
@@ -160,10 +173,11 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
         <div class="stat"><div class="k">จำนวนเหรียญ</div><div class="v" id="aQty">–</div></div>
         <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="aLoss">–</div></div>
         <div class="stat"><div class="k">กำไรรวม (ถ้าถึงทุก TP)</div><div class="v pos" id="aProfit">–</div></div>
+        <div class="stat"><div class="k">R:R จริงทั้งไม้ (หลังแบ่งปิด + ค่าธรรมเนียม)</div><div class="v" id="aRR">–</div></div>
       </div>
       <table class="plan">
         <caption class="sr-only">บันได Take Profit</caption>
-        <thead><tr><th scope="col">เป้า</th><th scope="col">ราคา</th><th scope="col">R:R</th><th scope="col">ปิด</th><th scope="col">กำไร</th></tr></thead>
+        <thead><tr><th scope="col">เป้า</th><th scope="col">ราคา</th><th scope="col">ระยะ</th><th scope="col">ปิด</th><th scope="col">กำไร (R)</th></tr></thead>
         <tbody id="aPlan"></tbody>
       </table>
       <ol class="steps" id="aSteps"></ol>
@@ -301,7 +315,7 @@ const PRESETS = {
   agg:  { sl: 0.8, rr: 5, split: [0.4, 0.3, 0.3] },
 };
 const AUTO_FEE = 0.0005, AUTO_MMR = 0.005;
-let preset = "bal", rr = 3, autoPlan = null;
+let preset = "bal", rr = 3, autoSide = "long", autoPlan = null;
 const pick = (group, b) => document.querySelectorAll(group + " button").forEach(x => (x.classList.toggle("on", x === b), x.setAttribute("aria-pressed", x === b)));
 
 const tabs = [...document.querySelectorAll("#tabs [role=tab]")];
@@ -324,30 +338,31 @@ tabs.forEach((b, i) => {
   };
 });
 
-document.querySelectorAll("#presets button").forEach(b => b.onclick = () => {
-  preset = b.dataset.p;
-  pick("#presets", b);
+$("presets").onchange = () => {
+  preset = $("presets").value;
   // เลือกสไตล์แล้วตั้ง R:R เริ่มต้นของสไตล์นั้นให้ (เปลี่ยนเองต่อได้)
   rr = PRESETS[preset].rr;
-  pick("#rrs", document.querySelector(`#rrs button[data-rr="${rr}"]`));
-  autoCalc();
-});
-document.querySelectorAll("#rrs button").forEach(b => b.onclick = () => {
-  rr = +b.dataset.rr;
-  pick("#rrs", b);
-  autoCalc();
-});
+  $("rrs").value = rr;
+  autoCalc(); save();
+};
+$("rrs").onchange = () => { rr = +$("rrs").value; autoCalc(); save(); };
 ["aEntry", "aLiq", "aBal", "aRisk"].forEach(id => $(id).oninput = autoCalc);
+document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
+  autoSide = b.dataset.side;
+  pick("#aDir", b);
+  autoCalc(); save();
+});
 
 function autoCalc() {
   const v = id => parseFloat($(id).value);
   const entry = v("aEntry"), liq = v("aLiq"), bal = v("aBal"), risk = v("aRisk") / 100;
-  const ids = ["aSide","aLev","aSL","aBuf","aNotional","aMargin","aQty","aLoss","aProfit"];
+  const ids = ["aRR","aSide","aLev","aSL","aBuf","aNotional","aMargin","aQty","aLoss","aProfit"];
   const reset = m => { ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
   if (![entry, liq, bal, risk].every(n => n > 0)) return reset("กรอก Entry, Liquidation, ทุน และความเสี่ยงให้ครบ");
   if (entry === liq) return reset("Liquidation ต้องไม่เท่ากับราคาเข้า");
 
-  const dir = liq < entry ? 1 : -1; // Liq ต่ำกว่า Entry = LONG
+  const dir = autoSide === "long" ? 1 : -1;
+  if ((entry - liq) * dir <= 0) return reset(dir > 0 ? "LONG: ราคา Liquidation ต้องต่ำกว่าราคาเข้า" : "SHORT: ราคา Liquidation ต้องสูงกว่าราคาเข้า");
   const p = PRESETS[preset];
   const dist = Math.abs(entry - liq);
   const lev = 1 / (dist / entry + AUTO_MMR);
@@ -374,8 +389,9 @@ function autoCalc() {
   $("aQty").textContent = fmt(qty, 6);
   $("aLoss").textContent = "-" + fmt(riskAmt) + " USDT";
   $("aProfit").textContent = "+" + fmt(total) + " USDT";
+  $("aRR").textContent = "1 : " + fmt(total / riskAmt);
   $("aPlan").innerHTML = tps.map((t, i) =>
-    `<tr><th scope="row">TP${i + 1}</th><td>${px(t.price)}</td><td>1:${t.r}</td><td>${t.pct * 100}%</td><td class="pos">+${fmt(t.profit)}</td></tr>`).join("");
+    `<tr><th scope="row">TP${i + 1}</th><td>${px(t.price)}</td><td>${+t.r.toFixed(2)}R</td><td>${t.pct * 100}%</td><td class="pos">+${fmt(t.profit)} <span class="rr">(${fmt(t.profit / riskAmt)}R)</span></td></tr>`).join("");
   $("aSteps").innerHTML = [
     `เปิด <b>${dir > 0 ? "LONG" : "SHORT"}</b> ที่ <b>${px(entry)}</b> ขนาด <b>${fmt(notional)} USDT</b> (${fmt(lev, 1)}x, Isolated)`,
     `ตั้ง Stop Loss ที่ <b>${px(sl)}</b> ทันทีหลังเข้า — เสียไม่เกิน ${fmt(riskAmt)} USDT`,
@@ -420,13 +436,14 @@ $("aCopy").onclick = () => {
     `📊 ${a.dir > 0 ? "LONG" : "SHORT"} · ${fmt(a.rawLev, 1)}x Isolated`,
     `Entry: ${px(a.entry)}`,
     `SL: ${px(a.sl)} (เสีย ${fmt(a.riskAmt)} USDT)`,
-    ...a.tps.map((t, i) => `TP${i + 1}: ${px(t.price)} (1:${t.r}) ปิด ${t.pct * 100}%`),
+    ...a.tps.map((t, i) => `TP${i + 1}: ${px(t.price)} (${+t.r.toFixed(2)}R) ปิด ${t.pct * 100}%`),
+    `R:R จริงทั้งไม้: 1 : ${fmt(a.total / a.riskAmt)}`,
     `Liq: ${px(a.liq)}`,
     `ขนาด: ${fmt(a.notional)} USDT · Margin ${fmt(a.margin)} USDT`,
     `ถึง TP1 → เลื่อน SL มาที่ราคาเข้า`,
   ].join("\n"), $("aCopy"));
 };
-const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, b: $("aBal").value, r: $("aRisk").value, p: preset, rr });
+const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, b: $("aBal").value, r: $("aRisk").value, p: preset, rr, d: autoSide });
 $("aShare").onclick = () => copy(location.origin + location.pathname + "?" + new URLSearchParams(state()), $("aShare"));
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
@@ -435,12 +452,11 @@ function load() {
   let st = Object.fromEntries(new URLSearchParams(location.search));
   if (!st.e) try { st = JSON.parse(localStorage.getItem("futures-auto")) || {}; } catch { st = {}; }
   [["e", "aEntry"], ["l", "aLiq"], ["b", "aBal"], ["r", "aRisk"]].forEach(([k, id]) => { if (st[k]) $(id).value = st[k]; });
-  if (PRESETS[st.p]) { preset = st.p; pick("#presets", document.querySelector(`#presets button[data-p="${preset}"]`)); }
-  const rb = document.querySelector(`#rrs button[data-rr="${st.rr}"]`);
-  if (rb) { rr = +st.rr; pick("#rrs", rb); }
+  if (PRESETS[st.p]) $("presets").value = preset = st.p;
+  if (st.d === "long" || st.d === "short") { autoSide = st.d; pick("#aDir", document.querySelector(`#aDir button[data-side="${st.d}"]`)); }
+  if ([...$("rrs").options].some(o => o.value === st.rr)) $("rrs").value = rr = +st.rr;
 }
 ["aEntry", "aLiq", "aBal", "aRisk"].forEach(id => $(id).addEventListener("input", save));
-document.querySelectorAll("#presets button, #rrs button").forEach(b => b.addEventListener("click", save));
 
 load();
 autoCalc();
