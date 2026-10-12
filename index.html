@@ -174,8 +174,9 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .grp{border:0;margin:0 0 32px;padding:0;min-width:0}
 .grp legend{padding:0;margin-bottom:16px;font:600 14px/1.5 var(--font);color:var(--text)}
 .grp>:last-child{margin-bottom:0}
-label:has(.hint){margin-bottom:16px}
-.grp>label:has(.hint):last-child{margin-bottom:0}
+.hint:empty{display:none}
+label:has(.hint:not(:empty)){margin-bottom:16px}
+.grp>label:last-child{margin-bottom:0}
 .side button.on{font-weight:600}
 .out{padding-top:24px;border-top:1px solid var(--border)}
 .out-t{margin:0 0 4px;font:600 14px/1.5 var(--font)}
@@ -384,7 +385,7 @@ function syncLev() {
     $("aLiqHint").textContent = "ใช้ราคาที่กรอกเอง · ปรับ Leverage เพื่อกลับไปคำนวณอัตโนมัติ";
   } else {
     if (entry > 0 && lev >= 1) $("aLiq").value = round(entry * (1 - dir * (1 / lev - AUTO_MMR)), 8);
-    $("aLiqHint").textContent = "ประมาณจาก Leverage · แก้เป็นราคาจริงจาก Exchange ได้";
+    $("aLiqHint").textContent = "";
   }
   refreshLevBtns();
 }
