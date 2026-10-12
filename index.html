@@ -40,7 +40,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:400 17px/1.5 var(--fon
 .nav-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 select{display:block;width:100%;margin-top:8px;padding:12px 40px 12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
   background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2386868b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center;
-  color:var(--text);font:400 17px/1.4 var(--font);appearance:none;-webkit-appearance:none;cursor:pointer;transition:border-color .2s ease-out}
+  color:var(--text);font:400 17px/1.5 var(--font);appearance:none;-webkit-appearance:none;cursor:pointer;transition:border-color .2s ease-out}
 select:focus-visible{border-color:var(--primary);outline:2px solid var(--primary);outline-offset:3px}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
@@ -49,7 +49,7 @@ main:focus{outline:none}
 h1{font:600 56px/1.25 var(--display);letter-spacing:normal;margin:0 0 12px;text-align:center}
 .sub{color:var(--muted);margin:0 auto 48px;font-size:21px;line-height:1.3;text-align:center;max-width:640px}
 .card{background:var(--card);border-radius:var(--r-md);padding:32px}
-.card h2{font:600 21px/1.3 var(--font);margin:0 0 24px}
+.card h2{font:600 21px/1.4 var(--font);margin:0 0 24px}
 .side{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;margin-bottom:24px;background:var(--bg);border-radius:var(--r-full)}
 .side button{min-height:44px;border:0;border-radius:var(--r-full);background:transparent;color:var(--muted);font:400 14px/1.5 var(--font);cursor:pointer;
   transition:background-color 320ms var(--ease),color 320ms var(--ease)}
@@ -58,7 +58,7 @@ h1{font:600 56px/1.25 var(--display);letter-spacing:normal;margin:0 0 12px;text-
 .side button.on[data-side=short]{background:var(--short);color:var(--on-signal)}
 label{display:block;font-size:14px;line-height:1.5;color:var(--muted);margin-bottom:24px}
 input{display:block;width:100%;margin-top:8px;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
-  background:var(--card);color:var(--text);font:400 17px/1.4 var(--font);font-variant-numeric:tabular-nums;
+  background:var(--card);color:var(--text);font:400 17px/1.5 var(--font);font-variant-numeric:tabular-nums;
   transition:border-color .2s ease-out}
 input:focus-visible,button:focus-visible{border-color:var(--primary);outline:2px solid var(--primary);outline-offset:3px}
 input[type=range]{min-height:44px;padding:0;border:0;margin-top:0;accent-color:var(--primary);flex:1}
@@ -71,7 +71,8 @@ input[type=range]{min-height:44px;padding:0;border:0;margin-top:0;accent-color:v
 .stat.big{grid-column:span 2;padding:0 0 24px}
 .stat.big .v{font:600 44px/1.2 var(--display);letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
 .pos{color:var(--long)}.neg{color:var(--short)}.warn{color:var(--warn)}
-.msg{font-size:14px;line-height:1.5;color:var(--short);min-height:20px}
+.msg{font-size:14px;line-height:1.5;color:var(--short);margin:0 0 24px}
+.msg:empty{display:none}
 .msg:not(:empty)::before{content:"⚠ " / ""}
 footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);font-size:12px;line-height:1.5;letter-spacing:0.01em;text-align:center}
 @media (max-width:734px){
@@ -99,8 +100,8 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 [hidden]{display:none!important}
 /* ---- Leverage: ปุ่มเปิด dialog + dialog พื้นหลังเบลอ ---- */
 .lev-btn{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);
-  background:var(--card);color:var(--text);font:400 17px/1.4 var(--font);font-variant-numeric:tabular-nums;cursor:pointer;transition:border-color .2s ease-out}
-.lev-btn::after{content:"ปรับ";font-size:14px;color:var(--accent-text)}
+  background:var(--card);color:var(--text);font:400 17px/1.5 var(--font);font-variant-numeric:tabular-nums;cursor:pointer;transition:border-color .2s ease-out}
+.lev-btn::after{content:"ปรับ";font:400 14px/1.5 var(--font);color:var(--accent-text)}
 .lev-btn:hover{border-color:var(--primary)}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:12px 24px;border:1px solid transparent;border-radius:var(--r-full);background:var(--primary);color:var(--on-accent);font:400 17px/1 var(--font);cursor:pointer;transition:background-color .2s ease-out}
 .btn:hover{background:var(--primary-hover)}.btn:active{background:var(--primary-active)}
@@ -139,7 +140,7 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .ld-info .warn{display:block}
 .ld-actions{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (prefers-reduced-motion:reduce){dialog#levDlg[open]{animation:none}}
-.hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--muted)}
+.hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;color:var(--muted)}
 .plan .rr{color:var(--muted);font-size:12px}
 @media (max-width:374px){.res{grid-template-columns:1fr}.stat.big{grid-column:auto}}
 @media (forced-colors:active){
@@ -162,7 +163,20 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .ladder .lb.edge-l{transform:none}.ladder .lb.edge-r{transform:translateX(-100%)}
 @media (max-width:734px){.res4{grid-template-columns:1fr 1fr}}
 .ticket{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
-.ticket-in{position:sticky;top:68px}
+.ticket-in{align-self:start}
+/* sticky เฉพาะจอสูงพอให้เห็นทั้งการ์ด — ไม่งั้นผลคำนวณด้านล่างจะเลื่อนไปดูไม่ได้ */
+@media (min-width:901px) and (min-height:1100px){.ticket-in{position:sticky;top:68px}}
+.grp{border:0;margin:0 0 32px;padding:0;min-width:0}
+.grp legend{padding:0;margin-bottom:16px;font:600 14px/1.5 var(--font);color:var(--text)}
+.grp>:last-child{margin-bottom:0}
+label:has(.hint){margin-bottom:16px}
+.grp>label:has(.hint):last-child{margin-bottom:0}
+.side button.on{font-weight:600}
+.out{padding-top:24px;border-top:1px solid var(--border)}
+.out-t{margin:0 0 4px;font:600 14px/1.5 var(--font)}
+.ticket-in .stat .v{font-weight:600;white-space:nowrap;overflow-wrap:normal}
+.ticket-in .stat:nth-last-child(-n+2){border-bottom:0}
+.lev-btn:hover::after{text-decoration:underline}
 .top .big2{grid-column:span 4;padding:0 0 24px}.top .big2 .v{font:600 44px/1.2 var(--display);font-variant-numeric:tabular-nums}
 .ticket .ladder{margin-top:32px}
 .res4 .wide{grid-column:1/-1}
@@ -172,7 +186,7 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .dd{position:relative;margin-top:8px}
 .dd select{position:absolute;inset:0;opacity:0;pointer-events:none}
 .dd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:48px;padding:12px 16px;border-radius:var(--r-sm);
-  border:1px solid var(--field-border);background:var(--card);color:var(--text);font:400 17px/1.4 var(--font);text-align:left;cursor:pointer;transition:border-color .2s ease-out}
+  border:1px solid var(--field-border);background:var(--card);color:var(--text);font:400 17px/1.5 var(--font);text-align:left;cursor:pointer;transition:border-color .2s ease-out}
 .dd-btn::after{content:"";flex:none;width:12px;height:8px;background:var(--muted);
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
@@ -191,7 +205,7 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6.5l3 3 6-7' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6.5l3 3 6-7' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
 .dd-opt.active{background:color-mix(in srgb,var(--text) 8%,transparent)}
-.dd-opt small{display:block;font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--muted)}
+.dd-opt small{display:block;font-size:12px;line-height:1.5;color:var(--muted)}
 @media (forced-colors:active){.dd-list{background:Canvas;border-color:CanvasText}.dd-opt.active{outline:2px solid Highlight}}
 </style>
 </head>
@@ -211,7 +225,9 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
         <button type="button" data-side="long" class="on">LONG</button>
         <button type="button" data-side="short">SHORT</button>
       </div>
-        <label>ราคาเข้า (Entry)<input id="aEntry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
+      <fieldset class="grp">
+        <legend>ราคา</legend>
+        <label>ราคาเข้า<input id="aEntry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
         <div class="lev-wrap">
           <span class="lbl" id="aLevLbl">Leverage</span>
           <button type="button" class="lev-btn" data-lev="aLevIn" aria-haspopup="dialog" aria-labelledby="aLevLbl aLevIn-btn" id="aLevIn-btn">10x</button>
@@ -221,16 +237,22 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
           </div>
         </div>
         <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any" aria-describedby="aLiqHint"><span class="hint" id="aLiqHint"></span></label>
-        <label>ทุนในบัญชี (USDT)<input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any"></label>
+      </fieldset>
+      <fieldset class="grp">
+        <legend>เงินทุน</legend>
+        <label>ทุน (USDT)<input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any"></label>
         <label>ความเสี่ยงต่อไม้ (%)<input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any" aria-describedby="aRiskHint"><span class="hint" id="aRiskHint"></span></label>
-      <div><label>สไตล์แผนเทรด
+      </fieldset>
+      <fieldset class="grp">
+        <legend>แผนเทรด</legend>
+        <label>สไตล์
         <select id="presets">
           <option value="safe">ปลอดภัย — SL 40% ของระยะถึง Liq</option>
           <option value="bal" selected>สมดุล — SL 60% ของระยะถึง Liq</option>
           <option value="agg">ดุดัน — SL 80% ของระยะถึง Liq</option>
         </select>
-      </label></div>
-      <div><label>จำนวน TP
+        </label>
+        <label>จำนวนเป้า TP
         <select id="tpn">
           <option value="1">1 TP — ปิดทั้งหมดที่เป้าเดียว</option>
           <option value="2">2 TP — ปิด 50 / 50</option>
@@ -238,22 +260,24 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
           <option value="4">4 TP — ปิด 40 / 30 / 20 / 10</option>
           <option value="5">5 TP — ปิด 30 / 25 / 20 / 15 / 10</option>
         </select>
-      </label></div>
-      <div><label>ระยะ TP สุดท้าย
+        </label>
+        <label>ระยะ TP สุดท้าย (R)
         <select id="rrs">
           <option value="1.5">1.5R — ไกล 1.5 เท่าของระยะ SL</option>
           <option value="2">2R — ไกล 2 เท่าของระยะ SL</option>
           <option value="3" selected>3R — ไกล 3 เท่าของระยะ SL</option>
           <option value="5">5R — ไกล 5 เท่าของระยะ SL</option>
         </select>
-      </label></div>
-      <div class="res">
-        <div class="stat"><div class="k">ฝั่ง</div><div class="v" id="aSide">–</div></div>
-        <div class="stat"><div class="k">Leverage (ประมาณ)</div><div class="v" id="aLev">–</div></div>
-        <div class="stat"><div class="k">Stop Loss แนะนำ</div><div class="v neg" id="aSL">–</div></div>
-        <div class="stat"><div class="k">ระยะเผื่อก่อน Liq</div><div class="v" id="aBuf">–</div></div>
-      </div>
+        </label>
+      </fieldset>
       <div class="msg" id="aMsg" role="status"></div>
+      <section class="out" aria-labelledby="outT">
+        <h3 class="out-t" id="outT">ผลคำนวณ</h3>
+        <div class="res">
+          <div class="stat"><div class="k">Stop Loss แนะนำ</div><div class="v neg" id="aSL">–</div></div>
+          <div class="stat"><div class="k">ระยะเผื่อก่อน Liq</div><div class="v" id="aBuf">–</div></div>
+        </div>
+      </section>
     </section>
     <section class="card">
       <h2>แผนเทรดแนะนำ</h2>
@@ -352,10 +376,10 @@ function syncLev() {
       const l = 1 / (Math.abs(entry - liq) / entry + AUTO_MMR);
       $("aLevIn").value = round(l, 1); $("aLevR").value = Math.round(l);
     }
-    $("aLiqHint").textContent = "ใช้ราคาที่กรอกเอง — Leverage คำนวณย้อนกลับให้ · เลื่อน Leverage เพื่อกลับไปคำนวณ Liq อัตโนมัติ";
+    $("aLiqHint").textContent = "ใช้ราคาที่กรอกเอง · ปรับ Leverage เพื่อกลับไปคำนวณอัตโนมัติ";
   } else {
     if (entry > 0 && lev >= 1) $("aLiq").value = round(entry * (1 - dir * (1 / lev - AUTO_MMR)), 8);
-    $("aLiqHint").textContent = "ประมาณจาก Leverage (MMR 0.5%) — แก้เป็นราคาจริงจาก Exchange ได้";
+    $("aLiqHint").textContent = "ประมาณจาก Leverage · แก้เป็นราคาจริงจาก Exchange ได้";
   }
   refreshLevBtns();
 }
@@ -373,8 +397,8 @@ document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
 function autoCalc() {
   const v = id => parseFloat($(id).value);
   const entry = v("aEntry"), liq = v("aLiq"), bal = v("aBal"), risk = v("aRisk") / 100;
-  $("aRiskHint").textContent = bal > 0 && risk > 0 ? `= เสียไม่เกิน ${fmt(bal * risk)} USDT ถ้าโดน SL (ไม่เกี่ยวกับ Leverage)` : "";
-  const ids = ["aRR","aSide","aLev","aSL","aBuf","aNotional","aMargin","aQty","aLoss","aProfit"];
+  $("aRiskHint").textContent = bal > 0 && risk > 0 ? `เสียไม่เกิน ${fmt(bal * risk)} USDT ถ้าโดน SL` : "";
+  const ids = ["aRR","aSL","aBuf","aNotional","aMargin","aQty","aLoss","aProfit"];
   const reset = m => { ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
   if (![entry, liq, bal, risk].every(n => n > 0)) return reset("กรอก Entry, Liquidation, ทุน และความเสี่ยงให้ครบ");
   if (entry === liq) return reset("Liquidation ต้องไม่เท่ากับราคาเข้า");
@@ -400,8 +424,6 @@ function autoCalc() {
   });
   const total = tps.reduce((a, t) => a + t.profit, 0);
 
-  $("aSide").innerHTML = dir > 0 ? '<span class="pos">LONG</span>' : '<span class="neg">SHORT</span>';
-  $("aLev").textContent = fmt(lev, 1) + "x";
   $("aSL").textContent = px(sl);
   $("aBuf").textContent = fmt(Math.abs(sl - liq) / entry * 100) + "%";
   $("aNotional").textContent = fmt(notional) + " USDT";
