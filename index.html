@@ -242,7 +242,16 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
           <option value="agg">ดุดัน — SL 80% ของระยะถึง Liq</option>
         </select>
       </label></div>
-      <div><label>ระยะ TP สุดท้าย (TP3)
+      <div><label>จำนวน TP
+        <select id="tpn">
+          <option value="1">1 TP — ปิดทั้งหมดที่เป้าเดียว</option>
+          <option value="2">2 TP — ปิด 50 / 50</option>
+          <option value="3" selected>3 TP — ตามสไตล์แผนเทรด</option>
+          <option value="4">4 TP — ปิด 40 / 30 / 20 / 10</option>
+          <option value="5">5 TP — ปิด 30 / 25 / 20 / 15 / 10</option>
+        </select>
+      </label></div>
+      <div><label>ระยะ TP สุดท้าย
         <select id="rrs">
           <option value="1.5">1.5R — ไกล 1.5 เท่าของระยะ SL</option>
           <option value="2">2R — ไกล 2 เท่าของระยะ SL</option>
@@ -430,6 +439,9 @@ const PRESETS = {
   agg:  { sl: 0.8, rr: 5, split: [0.4, 0.3, 0.3] },
 };
 const AUTO_FEE = 0.0005, AUTO_MMR = 0.005;
+// สัดส่วนปิดต่อจำนวน TP (3 TP ใช้ของสไตล์แผนเทรด)
+const SPLITS = { 1: [1], 2: [0.5, 0.5], 4: [0.4, 0.3, 0.2, 0.1], 5: [0.3, 0.25, 0.2, 0.15, 0.1] };
+let tpn = 3;
 let preset = "bal", rr = 3, autoSide = "long", autoPlan = null;
 const pick = (group, b) => document.querySelectorAll(group + " button").forEach(x => (x.classList.toggle("on", x === b), x.setAttribute("aria-pressed", x === b)));
 
@@ -462,6 +474,7 @@ $("presets").onchange = () => {
   autoCalc(); save();
 };
 $("rrs").onchange = () => { rr = +$("rrs").value; autoCalc(); save(); };
+$("tpn").onchange = () => { tpn = +$("tpn").value; autoCalc(); save(); };
 // Entry + Leverage ↔ Liquidation: รู้ 2 ค่าได้ค่าที่ 3 — ช่องที่ผู้ใช้แก้ล่าสุดเป็นตัวตั้ง
 // liqManual = ผู้ใช้กรอก Liq จริงจาก Exchange เอง → คำนวณ Leverage ย้อนกลับแทน
 let liqManual = false;
@@ -512,11 +525,13 @@ function autoCalc() {
   const qty = riskAmt / (slDist + AUTO_FEE * (entry + sl));
   const notional = qty * entry, margin = notional / lev;
 
-  // บันได TP: TP1 = 1R, TP2 = กึ่งกลาง, TP3 = เป้าที่เลือก
-  const tps = [1, (1 + rr) / 2, rr].map((r, i) => {
+  // บันได TP: 1 TP = เป้าสุดท้ายเลย, หลาย TP = กระจายเท่า ๆ กันจาก 1R ถึงเป้าสุดท้าย
+  const split = tpn === 3 ? p.split : SPLITS[tpn];
+  const rs = tpn === 1 ? [rr] : split.map((_, i) => 1 + (rr - 1) * i / (tpn - 1));
+  const tps = rs.map((r, i) => {
     const price = entry + dir * slDist * r;
-    const q = qty * p.split[i];
-    return { r, price, pct: p.split[i], profit: q * slDist * r - AUTO_FEE * q * (entry + price) };
+    const q = qty * split[i];
+    return { r, price, pct: split[i], profit: q * slDist * r - AUTO_FEE * q * (entry + price) };
   });
   const total = tps.reduce((a, t) => a + t.profit, 0);
 
@@ -531,24 +546,27 @@ function autoCalc() {
   $("aProfit").textContent = "+" + fmt(total) + " USDT";
   $("aRR").textContent = "1 : " + fmt(total / riskAmt);
   $("aPlan").innerHTML = tps.map((t, i) =>
-    `<tr><th scope="row">TP${i + 1}</th><td><button type="button" class="copy" data-v="${raw(t.price)}" aria-label="คัดลอกราคา TP${i + 1} ${px(t.price)}">${px(t.price)}</button></td><td>${+t.r.toFixed(2)}R</td><td>${t.pct * 100}%</td><td class="pos">+${fmt(t.profit)} <span class="rr">(${fmt(t.profit / riskAmt)}R)</span></td></tr>`).join("");
+    `<tr><th scope="row">TP${i + 1}</th><td><button type="button" class="copy" data-v="${raw(t.price)}" aria-label="คัดลอกราคา TP${i + 1} ${px(t.price)}">${px(t.price)}</button></td><td>${+t.r.toFixed(2)}R</td><td>${+(t.pct * 100).toFixed(0)}%</td><td class="pos">+${fmt(t.profit)} <span class="rr">(${fmt(t.profit / riskAmt)}R)</span></td></tr>`).join("");
   $("aSteps").innerHTML = [
     `เปิด <b>${dir > 0 ? "LONG" : "SHORT"}</b> ที่ <b>${px(entry)}</b> ขนาด <b>${fmt(notional)} USDT</b> (${fmt(lev, 1)}x, Isolated)`,
     `ตั้ง Stop Loss ที่ <b>${px(sl)}</b> ทันทีหลังเข้า — เสียไม่เกิน ${fmt(riskAmt)} USDT`,
-    `ถึง TP1 ปิด ${tps[0].pct * 100}% แล้ว<b>เลื่อน SL มาที่ราคาเข้า</b> (ไม้นี้ไม่ขาดทุนแล้ว)`,
-    `ถึง TP2 ปิดอีก ${tps[1].pct * 100}% และเลื่อน SL มาที่ TP1`,
-    `ปล่อยส่วนที่เหลือ ${tps[2].pct * 100}% วิ่งไป TP3`,
+    ...(tpn === 1 ? [`ถึง TP <b>${px(tps[0].price)}</b> ปิดทั้งหมด`] : tps.map((t, i) => {
+      const pct = +(t.pct * 100).toFixed(0);
+      if (i === 0) return `ถึง TP1 ปิด ${pct}% แล้ว<b>เลื่อน SL มาที่ราคาเข้า</b> (ไม้นี้ไม่ขาดทุนแล้ว)`;
+      if (i === tps.length - 1) return `ปล่อยส่วนที่เหลือ ${pct}% วิ่งไป TP${i + 1}`;
+      return `ถึง TP${i + 1} ปิดอีก ${pct}% และเลื่อน SL มาที่ TP${i}`;
+    })),
   ].map(x => `<li>${x}</li>`).join("");
 
   const msgs = [];
   if (margin > bal) msgs.push("Margin เกินทุน — Liquidation ใกล้เกินไปหรือความเสี่ยงสูงเกิน");
   if (lev > 50) msgs.push("Leverage สูงมาก — ราคาแกว่งนิดเดียวก็โดน SL");
   $("aMsg").textContent = msgs.join(" · ");
-  announce(`${dir > 0 ? "LONG" : "SHORT"} ${fmt(lev, 1)}x, ขนาด ${fmt(notional)} USDT, Stop Loss ${px(sl)}, TP3 ${px(tps[2].price)}`);
-  autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps[1].price, lev: Math.min(125, Math.max(1, Math.round(lev))), bal, risk: risk * 100 };
+  announce(`${dir > 0 ? "LONG" : "SHORT"} ${fmt(lev, 1)}x, ขนาด ${fmt(notional)} USDT, Stop Loss ${px(sl)}, TP สุดท้าย ${px(tps.at(-1).price)}`);
+  autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps.at(-1).price, lev: Math.min(125, Math.max(1, Math.round(lev))), bal, risk: risk * 100 };
 }
 
-const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, r: $("aRisk").value, p: preset, rr, d: autoSide });
+const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, r: $("aRisk").value, p: preset, rr, n: tpn, d: autoSide });
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
 function save() { try { localStorage.setItem("futures-auto", JSON.stringify(state())); } catch {} }
@@ -559,6 +577,7 @@ function load() {
   if (PRESETS[st.p]) $("presets").value = preset = st.p;
   if (st.d === "long" || st.d === "short") { autoSide = st.d; pick("#aDir", document.querySelector(`#aDir button[data-side="${st.d}"]`)); }
   if ([...$("rrs").options].some(o => o.value === st.rr)) $("rrs").value = rr = +st.rr;
+  if ([...$("tpn").options].some(o => o.value === String(st.n))) $("tpn").value = tpn = +st.n;
   if (+st.v >= 1) { $("aLevIn").value = st.v; $("aLevR").value = Math.round(st.v); }
   // ข้อมูลเก่า (ก่อนมี Leverage) มีแต่ Liq → ถือว่ากรอกเอง
   liqManual = st.m != null ? st.m == 1 : !!st.l;
@@ -675,8 +694,8 @@ function enhanceSelect(sel) {
   sel.addEventListener("dd-sync", sync); // ให้โค้ดที่ตั้ง sel.value เองสั่ง sync ได้
   sync();
 }
-["presets", "rrs"].forEach(id => enhanceSelect($(id)));
-const syncDD = () => ["presets", "rrs"].forEach(id => $(id).dispatchEvent(new Event("dd-sync")));
+["presets", "tpn", "rrs"].forEach(id => enhanceSelect($(id)));
+const syncDD = () => ["presets", "tpn", "rrs"].forEach(id => $(id).dispatchEvent(new Event("dd-sync")));
 syncDD();
 
 
@@ -689,7 +708,7 @@ function drawLadder() {
   const pos = p => (a.dir > 0 ? (p - lo) : (hi - p)) / (hi - lo) * 100;
   const z = (c, x1, x2) => `<div class="zone ${c}" style="left:${Math.min(x1, x2)}%;width:${Math.abs(x2 - x1)}%"></div>`;
   el.innerHTML = '<div class="track"></div>' +
-    z("z-liq", pos(a.liq), pos(a.sl)) + z("z-loss", pos(a.sl), pos(a.entry)) + z("z-win", pos(a.entry), pos(a.tps[2].price)) +
+    z("z-liq", pos(a.liq), pos(a.sl)) + z("z-loss", pos(a.sl), pos(a.entry)) + z("z-win", pos(a.entry), pos(a.tps.at(-1).price)) +
     pts.map(([n, p], i) => { const x = pos(p), edge = x < 8 ? " edge-l" : x > 92 ? " edge-r" : "";
       return `<div class="mk" style="left:${x}%"></div><div class="lb ${i % 2 ? "dn" : "up"}${edge}" style="left:${x}%">${n}<b>${px(p)}</b></div>`; }).join("");
 }
