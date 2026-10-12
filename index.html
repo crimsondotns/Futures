@@ -80,11 +80,7 @@ footer{margin-top:48px;color:var(--muted);font-size:12px;line-height:1.5;text-al
 .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.actions .btn{margin-top:0}
 .btn-2{background:transparent;color:var(--primary);border:1px solid var(--primary)}
 .btn-2:hover{background:var(--primary);color:var(--on-accent)}.btn-2:active{background:var(--primary-active);color:var(--on-accent)}
-.fetch{margin:0 0 12px}
-select{display:block;width:100%;margin-top:8px;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--card);color:var(--text);font:400 17px var(--font)}
-select:focus-visible{border-color:var(--primary);outline:2px solid var(--primary);outline-offset:3px}
 input[type=text]{text-transform:uppercase}
-.hint{font-size:12px;color:var(--muted);margin:0 0 20px;min-height:1.5em}
 </style>
 </head>
 <body>
@@ -102,21 +98,7 @@ input[type=text]{text-transform:uppercase}
    <div class="grid" id="auto">
     <section class="card">
       <h2>กรอกแค่ 2 ค่า</h2>
-      <div class="row">
-        <label>Exchange
-          <select id="aEx">
-            <option value="binance">Binance</option>
-            <option value="bybit">Bybit</option>
-            <option value="okx">OKX</option>
-            <option value="bitget">Bitget</option>
-            <option value="hyperliquid">Hyperliquid (DEX)</option>
-            <option value="manual">อื่น ๆ / กรอกราคาเอง</option>
-          </select>
-        </label>
-        <label>เหรียญ<input id="aSym" type="text" value="BTCUSDT" autocomplete="off" spellcheck="false"></label>
-      </div>
-      <button class="btn btn-2 fetch" id="aFetch">ดึงราคาล่าสุด</button>
-      <p class="hint" id="aMark"></p>
+      <label>เหรียญ (ไว้แสดงในแผนที่คัดลอก)<input id="aSym" type="text" value="BTCUSDT" autocomplete="off" spellcheck="false"></label>
       <div class="row">
         <label>ราคาเข้า (Entry)<input id="aEntry" type="number" value="60000" min="0" step="any"></label>
         <label>ราคา Liquidation<input id="aLiq" type="number" value="54300" min="0" step="any"></label>
@@ -369,65 +351,6 @@ $("aUse").onclick = () => {
   document.querySelector("#tabs button[data-tab=manual]").click();
 };
 
-// ---------- ราคาล่าสุดจาก Exchange ----------
-// แต่ละตัวคืน { mark, funding (ทศนิยม), every (รอบ funding) }; รับชื่อเหรียญแบบ BTCUSDT แล้วแปลงเอง
-const base = s => s.replace(/[-_]?(USDT|USDC|USD)(-SWAP)?$/, "");
-const getJSON = async (url, opt) => { const r = await fetch(url, opt); if (!r.ok) throw 0; return r.json(); };
-const EXCHANGES = {
-  binance: async s => {
-    const d = await getJSON(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${base(s)}USDT`);
-    return { mark: +d.markPrice, funding: +d.lastFundingRate, every: "8 ชม." };
-  },
-  bybit: async s => {
-    const d = (await getJSON(`https://api.bybit.com/v5/market/tickers?category=linear&symbol=${base(s)}USDT`)).result.list[0];
-    return { mark: +d.markPrice, funding: +d.fundingRate, every: "8 ชม." };
-  },
-  okx: async s => {
-    const id = `${base(s)}-USDT-SWAP`;
-    const [m, f] = await Promise.all([
-      getJSON(`https://www.okx.com/api/v5/public/mark-price?instType=SWAP&instId=${id}`),
-      getJSON(`https://www.okx.com/api/v5/public/funding-rate?instId=${id}`),
-    ]);
-    return { mark: +m.data[0].markPx, funding: +f.data[0].fundingRate, every: "8 ชม." };
-  },
-  bitget: async s => {
-    const q = `symbol=${base(s)}USDT&productType=usdt-futures`;
-    const [m, f] = await Promise.all([
-      getJSON(`https://api.bitget.com/api/v2/mix/market/symbol-price?${q}`),
-      getJSON(`https://api.bitget.com/api/v2/mix/market/current-fund-rate?${q}`),
-    ]);
-    return { mark: +m.data[0].markPrice, funding: +f.data[0].fundingRate, every: "8 ชม." };
-  },
-  hyperliquid: async s => {
-    const [meta, ctx] = await getJSON("https://api.hyperliquid.xyz/info", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "metaAndAssetCtxs" }),
-    });
-    const i = meta.universe.findIndex(u => u.name === base(s));
-    if (i < 0) throw 0;
-    return { mark: +ctx[i].markPx, funding: +ctx[i].funding, every: "1 ชม." };
-  },
-};
-function syncEx() {
-  const manual = $("aEx").value === "manual";
-  $("aFetch").classList.toggle("hide", manual);
-  $("aSym").closest("label").classList.toggle("hide", manual);
-  $("aMark").textContent = manual ? "กรอกราคาเข้าและ Liquidation จากหน้า Exchange ของคุณ" : "";
-}
-$("aEx").onchange = () => { syncEx(); save(); };
-$("aFetch").onclick = async () => {
-  const sym = $("aSym").value.trim().toUpperCase(), ex = $("aEx").value;
-  if (!sym || !EXCHANGES[ex]) return;
-  const name = $("aEx").selectedOptions[0].textContent;
-  $("aMark").textContent = "กำลังดึงราคา…";
-  try {
-    const d = await EXCHANGES[ex](sym);
-    if (!(d.mark > 0)) throw 0;
-    $("aEntry").value = +d.mark.toPrecision(8);
-    $("aMark").textContent = `${name} Mark ${px(d.mark)} · Funding ${fmt(d.funding * 100, 4)}% ต่อ ${d.every} — อย่าลืมแก้ราคา Liquidation ให้ตรงกับ Exchange`;
-    autoCalc(); save();
-  } catch { $("aMark").textContent = `ดึงราคาจาก ${name} ไม่ได้ — ตรวจชื่อเหรียญ (เช่น BTCUSDT) หรือกรอกราคาเอง`; }
-};
-
 // ---------- คัดลอกแผน / ลิงก์แชร์ ----------
 const flash = (btn, text) => { const t = btn.textContent; btn.textContent = text; setTimeout(() => btn.textContent = t, 1500); };
 const copy = async (text, btn) => {
@@ -438,7 +361,7 @@ $("aCopy").onclick = () => {
   const a = autoPlan; if (!a) return;
   const sym = $("aSym").value.trim().toUpperCase();
   copy([
-    `📊 ${$("aEx").value === "manual" ? "" : $("aEx").selectedOptions[0].textContent + " · "}${sym} ${a.dir > 0 ? "LONG" : "SHORT"} · ${fmt(a.rawLev, 1)}x Isolated`,
+    `📊 ${sym} ${a.dir > 0 ? "LONG" : "SHORT"} · ${fmt(a.rawLev, 1)}x Isolated`,
     `Entry: ${px(a.entry)}`,
     `SL: ${px(a.sl)} (เสีย ${fmt(a.riskAmt)} USDT)`,
     ...a.tps.map((t, i) => `TP${i + 1}: ${px(t.price)} (1:${t.r}) ปิด ${t.pct * 100}%`),
@@ -447,7 +370,7 @@ $("aCopy").onclick = () => {
     `ถึง TP1 → เลื่อน SL มาที่ราคาเข้า`,
   ].join("\n"), $("aCopy"));
 };
-const state = () => ({ x: $("aEx").value, s: $("aSym").value.trim().toUpperCase(), e: $("aEntry").value, l: $("aLiq").value, b: $("aBal").value, r: $("aRisk").value, p: preset, rr });
+const state = () => ({ s: $("aSym").value.trim().toUpperCase(), e: $("aEntry").value, l: $("aLiq").value, b: $("aBal").value, r: $("aRisk").value, p: preset, rr });
 $("aShare").onclick = () => copy(location.origin + location.pathname + "?" + new URLSearchParams(state()), $("aShare"));
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
@@ -455,7 +378,6 @@ function save() { try { localStorage.setItem("futures-auto", JSON.stringify(stat
 function load() {
   let st = Object.fromEntries(new URLSearchParams(location.search));
   if (!st.e) try { st = JSON.parse(localStorage.getItem("futures-auto")) || {}; } catch { st = {}; }
-  if (EXCHANGES[st.x] || st.x === "manual") $("aEx").value = st.x;
   [["s", "aSym"], ["e", "aEntry"], ["l", "aLiq"], ["b", "aBal"], ["r", "aRisk"]].forEach(([k, id]) => { if (st[k]) $(id).value = st[k]; });
   if (PRESETS[st.p]) { preset = st.p; pick("#presets", document.querySelector(`#presets button[data-p="${preset}"]`)); }
   const rb = document.querySelector(`#rrs button[data-rr="${st.rr}"]`);
@@ -463,10 +385,8 @@ function load() {
 }
 ["aSym", "aEntry", "aLiq", "aBal", "aRisk"].forEach(id => $(id).addEventListener("input", save));
 document.querySelectorAll("#presets button, #rrs button").forEach(b => b.addEventListener("click", save));
-$("aSym").addEventListener("keydown", e => { if (e.key === "Enter") $("aFetch").click(); });
 
 load();
-syncEx();
 autoCalc();
 </script>
 </body>
