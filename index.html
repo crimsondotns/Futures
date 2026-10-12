@@ -311,12 +311,9 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
         <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any" aria-describedby="aLiqHint"><span class="hint" id="aLiqHint"></span></label>
       </fieldset>
       <fieldset class="grp">
-        <legend>เงินทุน</legend>
-        <div class="row2">
-        <label>ทุน<span class="affix" data-unit="USDT"><input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any" aria-describedby="aBalU"><span class="sr-only" id="aBalU">หน่วย USDT</span></span></label>
-        <label>ความเสี่ยงต่อไม้<span class="affix" data-unit="%"><input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any" aria-describedby="aRiskU aRiskHint"><span class="sr-only" id="aRiskU">หน่วยเปอร์เซ็นต์ของทุน</span></span><span class="hint" id="aRiskHint"></span></label>
-        </div>
-        <button type="button" class="link" id="helpBtn" aria-haspopup="dialog">ความเสี่ยงต่อไม้คิดยังไง?</button>
+        <legend>เงินที่ใส่ไม้นี้</legend>
+        <label>Margin<span class="affix" data-unit="USDT"><input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="100" min="0" step="any" aria-describedby="aBalU aMgnHint"><span class="sr-only" id="aBalU">หน่วย USDT</span></span><span class="hint" id="aMgnHint"></span></label>
+        <button type="button" class="link" id="helpBtn" aria-haspopup="dialog">คำนวณยังไง?</button>
       </fieldset>
       <fieldset class="grp" id="planGrp">
         <legend>แผนเทรด</legend>
@@ -360,7 +357,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
       <h2>แผนเทรดแนะนำ</h2>
       <div class="res4 top">
         <div class="stat big2"><div class="k">ขนาดโพซิชัน (Notional)</div><div class="v" id="aNotional">–</div></div>
-        <div class="stat"><div class="k">Margin ที่ใช้</div><div class="v" id="aMargin">–</div></div>
+        <div class="stat"><div class="k">ราคาวิ่งถึง SL</div><div class="v" id="aSlPct">–</div></div>
         <div class="stat"><div class="k">จำนวนเหรียญ</div><div class="v" id="aQty">–</div></div>
         <div class="stat"><div class="k">ขาดทุนถ้าโดน SL</div><div class="v neg" id="aLoss">–</div></div>
         <div class="stat"><div class="k">กำไรรวม (ถ้าถึงทุก TP)</div><div class="v pos" id="aProfit">–</div></div>
@@ -401,22 +398,21 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 </dialog>
 <dialog id="helpDlg" aria-labelledby="helpT">
   <form method="dialog">
-    <h2 id="helpT" tabindex="-1">ความเสี่ยงต่อไม้ คิดยังไง</h2>
-    <p><b>ความเสี่ยงต่อไม้</b> คือ % ของทุนที่ยอมเสียได้สูงสุด <b>ถ้าราคาวิ่งไปโดน Stop Loss</b> — คุณเป็นคนตั้ง แล้วเว็บคำนวณย้อนกลับว่าควรเปิดโพซิชันขนาดเท่าไหร่</p>
+    <h2 id="helpT" tabindex="-1">ไม้นี้คำนวณยังไง</h2>
+    <p>คุณกรอก <b>Margin</b> ที่จะใส่ไม้นี้ แล้วเว็บคำนวณว่าโพซิชันใหญ่แค่ไหน และ <b>ถ้าโดน Stop Loss จะเสียเท่าไหร่</b></p>
     <h3>ตัวเลขของคุณตอนนี้</h3>
     <table class="help-t"><tbody id="helpRows"></tbody></table>
     <h3>สูตร</h3>
     <ol class="help-f">
-      <li>เงินที่ยอมเสีย = ทุน × ความเสี่ยงต่อไม้</li>
       <li>ระยะถึง Liq = 1 / Leverage − MMR 0.5%</li>
       <li>Stop Loss วางที่ 40 / 60 / 80% ของระยะ Entry → Liq (ปลอดภัย / สมดุล / ดุดัน)</li>
-      <li>จำนวนเหรียญ = เงินที่ยอมเสีย ÷ (|Entry − SL| + ค่าธรรมเนียม 0.05% × (Entry + SL))</li>
-      <li>ขนาดโพซิชัน = จำนวนเหรียญ × Entry · Margin = ขนาดโพซิชัน ÷ Leverage</li>
+      <li>ขนาดโพซิชัน = Margin × Leverage · จำนวนเหรียญ = ขนาดโพซิชัน ÷ Entry</li>
+      <li>ถ้าโดน SL เสีย = จำนวนเหรียญ × |Entry − SL| + ค่าธรรมเนียม 0.05% × จำนวนเหรียญ × (Entry + SL)</li>
     </ol>
     <h3>คำถามที่พบบ่อย</h3>
-    <p><b>ความเสี่ยง 1% = Margin 1% ไหม?</b> ไม่ใช่ — Margin คือเงินที่วางค้ำ ส่วนความเสี่ยงคือเงินที่เสียจริงตอนโดน SL</p>
-    <p><b>เปลี่ยน Leverage แล้วเสียมากขึ้นไหม?</b> ไม่ — ยังเสียเท่าเดิม แต่ Leverage สูง Liq จะใกล้ขึ้น SL แคบลง เว็บจึงเปิดโพซิชันใหญ่ขึ้นได้</p>
-    <p><b>ควรตั้งเท่าไหร่?</b> ส่วนใหญ่ใช้ 0.5–2% ต่อไม้ — ที่ 1% แพ้ติดกัน 10 ไม้ ทุนยังเหลือราว 90%</p>
+    <p><b>โดน SL แล้วเสีย Margin หมดไหม?</b> ไม่ — SL วางไว้ก่อน Liquidation เสมอ จึงเสียแค่บางส่วนของ Margin (เช่น 40–80% ตามสไตล์)</p>
+    <p><b>เปลี่ยนสไตล์แล้วอะไรเปลี่ยน?</b> สไตล์ยิ่งดุ SL ยิ่งใกล้ Liq — เสียมากขึ้นถ้าโดน SL แต่ราคามีที่แกว่งมากขึ้นก่อนโดน</p>
+    <p><b>เพิ่ม Leverage แล้วเป็นยังไง?</b> Margin เท่าเดิมแต่โพซิชันใหญ่ขึ้น Liq ใกล้ขึ้น — กำไรและขาดทุนเป็น USDT มากขึ้นทั้งคู่</p>
     <p class="help-note">Liquidation เป็นค่าประมาณแบบ Isolated (MMR 0.5%) — ค่าจริงขึ้นกับ Exchange</p>
     <div class="ld-actions one"><button class="btn" value="ok">เข้าใจแล้ว</button></div>
   </form>
@@ -486,7 +482,7 @@ $("aLevR").oninput = () => { $("aLevIn").value = $("aLevR").value; liqManual = f
 $("aLevIn").oninput = () => { $("aLevR").value = $("aLevIn").value; liqManual = false; syncLev(); autoCalc(); save(); };
 $("aLiq").oninput = () => { liqManual = true; syncLev(); autoCalc(); refreshLevBtns(); };
 $("aEntry").oninput = () => { syncLev(); autoCalc(); refreshLevBtns(); };
-["aBal", "aRisk"].forEach(id => $(id).oninput = autoCalc);
+$("aBal").oninput = autoCalc;
 document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
   autoSide = b.dataset.side;
   pick("#aDir", b);
@@ -495,11 +491,11 @@ document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
 
 function autoCalc() {
   const v = id => parseFloat($(id).value);
-  const entry = v("aEntry"), liq = v("aLiq"), bal = v("aBal"), risk = v("aRisk") / 100;
-  $("aRiskHint").textContent = bal > 0 && risk > 0 ? `เสียไม่เกิน ${fmt(bal * risk)} USDT ถ้าโดน SL` : "";
-  const ids = ["aRR","aSL","aBuf","aNotional","aMargin","aQty","aLoss","aProfit"];
+  const entry = v("aEntry"), liq = v("aLiq"), margin = v("aBal");
+  const ids = ["aRR","aSL","aBuf","aNotional","aSlPct","aQty","aLoss","aProfit"];
   const reset = m => { ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
-  if (![entry, liq, bal, risk].every(n => n > 0)) return reset("กรอก Entry, Liquidation, ทุน และความเสี่ยงให้ครบ");
+  $("aMgnHint").textContent = "";
+  if (![entry, liq, margin].every(n => n > 0)) return reset("กรอก Entry, Liquidation และ Margin ให้ครบ");
   if (entry === liq) return reset("Liquidation ต้องไม่เท่ากับราคาเข้า");
 
   const dir = autoSide === "long" ? 1 : -1;
@@ -509,9 +505,10 @@ function autoCalc() {
   const lev = 1 / (dist / entry + AUTO_MMR);
   const sl = entry - dir * dist * p.sl;
   const slDist = Math.abs(entry - sl);
-  const riskAmt = bal * risk;
-  const qty = riskAmt / (slDist + AUTO_FEE * (entry + sl));
-  const notional = qty * entry, margin = notional / lev;
+  // Margin ที่ใส่ × Leverage = ขนาดโพซิชัน → เงินที่เสียตอนโดน SL เป็นผลลัพธ์ (รวมค่าธรรมเนียมเข้า+ออก)
+  const notional = margin * lev, qty = notional / entry;
+  const riskAmt = qty * slDist + AUTO_FEE * qty * (entry + sl);
+  $("aMgnHint").textContent = `× ${fmt(lev, 1)}x = โพซิชัน ${fmt(notional)} USDT`;
 
   // บันได TP: 1 TP = เป้าสุดท้ายเลย, หลาย TP = กระจายเท่า ๆ กันจาก 1R ถึงเป้าสุดท้าย
   const split = tpn === 3 ? p.split : SPLITS[tpn];
@@ -526,9 +523,9 @@ function autoCalc() {
   $("aSL").textContent = px(sl);
   $("aBuf").textContent = fmt(Math.abs(sl - liq) / entry * 100) + "%";
   $("aNotional").textContent = fmt(notional) + " USDT";
-  $("aMargin").textContent = fmt(margin) + " USDT";
+  $("aSlPct").textContent = fmt(slDist / entry * 100) + "%";
   $("aQty").textContent = fmt(qty, 6);
-  $("aLoss").textContent = "-" + fmt(riskAmt) + " USDT";
+  $("aLoss").textContent = `-${fmt(riskAmt)} USDT (${fmt(riskAmt / margin * 100, 1)}%)`;
   $("aProfit").textContent = "+" + fmt(total) + " USDT";
   $("aRR").textContent = "1 : " + fmt(total / riskAmt);
   $("aPlan").innerHTML = tps.map((t, i) =>
@@ -545,21 +542,20 @@ function autoCalc() {
   ].map(x => `<li>${x}</li>`).join("");
 
   const msgs = [];
-  if (margin > bal) msgs.push("Margin เกินทุน — Liquidation ใกล้เกินไปหรือความเสี่ยงสูงเกิน");
   if (lev > 50) msgs.push("Leverage สูงมาก — ราคาแกว่งนิดเดียวก็โดน SL");
   $("aMsg").textContent = msgs.join(" · ");
   announce(`${dir > 0 ? "LONG" : "SHORT"} ${fmt(lev, 1)}x, ขนาด ${fmt(notional)} USDT, Stop Loss ${px(sl)}, TP สุดท้าย ${px(tps.at(-1).price)}`);
-  autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps.at(-1).price, lev: Math.min(125, Math.max(1, Math.round(lev))), bal, risk: risk * 100 };
+  autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps.at(-1).price, lev: Math.min(125, Math.max(1, Math.round(lev))), };
 }
 
-const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, r: $("aRisk").value, p: preset, rr, n: tpn, d: autoSide });
+const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, p: preset, rr, n: tpn, d: autoSide });
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
 function save() { try { localStorage.setItem("futures-auto", JSON.stringify(state())); } catch {} }
 function load() {
   let st = Object.fromEntries(new URLSearchParams(location.search));
   if (!st.e) try { st = JSON.parse(localStorage.getItem("futures-auto")) || {}; } catch { st = {}; }
-  [["e", "aEntry"], ["l", "aLiq"], ["b", "aBal"], ["r", "aRisk"]].forEach(([k, id]) => { if (st[k]) $(id).value = st[k]; });
+  [["e", "aEntry"], ["l", "aLiq"], ["b", "aBal"]].forEach(([k, id]) => { if (st[k]) $(id).value = st[k]; });
   if (PRESETS[st.p]) $("presets").value = preset = st.p;
   if (st.d === "long" || st.d === "short") { autoSide = st.d; pick("#aDir", document.querySelector(`#aDir button[data-side="${st.d}"]`)); }
   if ([...$("rrs").options].some(o => o.value === st.rr)) $("rrs").value = rr = +st.rr;
@@ -568,7 +564,7 @@ function load() {
   // ข้อมูลเก่า (ก่อนมี Leverage) มีแต่ Liq → ถือว่ากรอกเอง
   liqManual = st.m != null ? st.m == 1 : !!st.l;
 }
-["aEntry", "aLiq", "aBal", "aRisk"].forEach(id => $(id).addEventListener("input", save));
+["aEntry", "aLiq", "aBal"].forEach(id => $(id).addEventListener("input", save));
 
 load();
 syncLev();
@@ -580,13 +576,13 @@ $("helpBtn").onclick = () => {
   const a = autoPlan;
   const row = (k, calc, v, key) => `<tr${key ? ' class="key"' : ""}><th scope="row">${k}</th><td class="calc">${calc}</td><td>${v}</td></tr>`;
   $("helpRows").innerHTML = !a ? row("ยังคำนวณไม่ได้", "", "กรอกค่าให้ครบก่อน") : [
-    row("เงินที่ยอมเสีย", `${fmt(a.bal)} × ${fmt(a.risk)}%`, `${fmt(a.riskAmt)} USDT`, 1),
+    row("Margin ที่ใส่", "", `${fmt(a.margin)} USDT`, 1),
     row("Leverage / Liquidation", `${fmt(a.rawLev, 1)}x`, px(a.liq)),
+    row("ขนาดโพซิชัน", `${fmt(a.margin)} × ${fmt(a.rawLev, 1)}x`, `${fmt(a.notional)} USDT`, 1),
+    row("จำนวนเหรียญ", `${fmt(a.notional)} ÷ ${px(a.entry)}`, fmt(a.qty, 6)),
     row("Stop Loss", `${PRESETS[preset].sl * 100}% ของระยะ Entry → Liq`, px(a.sl), 1),
-    row("จำนวนเหรียญ", `${fmt(a.riskAmt)} ÷ ขาดทุนต่อเหรียญ`, fmt(a.qty, 6)),
-    row("ขนาดโพซิชัน", `${fmt(a.qty, 6)} × ${px(a.entry)}`, `${fmt(a.notional)} USDT`, 1),
-    row("Margin", `${fmt(a.notional)} ÷ ${fmt(a.rawLev, 1)}x`, `${fmt(a.margin)} USDT`),
-    row("ถ้าโดน SL เสีย", "รวมค่าธรรมเนียมแล้ว", `${fmt(a.riskAmt)} USDT`, 1),
+    row("ถ้าโดน SL เสีย", "รวมค่าธรรมเนียมแล้ว", `${fmt(a.riskAmt)} USDT (${fmt(a.riskAmt / a.margin * 100, 1)}% ของ Margin)`, 1),
+    row("กำไรรวมถ้าถึงทุก TP", `R:R 1 : ${fmt(a.total / a.riskAmt)}`, `${fmt(a.total)} USDT`),
   ].join("");
   helpDlg.showModal();
   $("helpT").focus(); helpDlg.scrollTop = 0; // เปิดที่หัวเรื่อง ไม่ใช่เลื่อนลงไปที่ปุ่มล่างสุด
