@@ -99,6 +99,7 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .btn{display:inline-block;margin-top:24px;min-height:44px;padding:12px 24px;border:0;border-radius:var(--r-full);background:var(--primary);color:var(--on-accent);font:400 17px/1 var(--font);cursor:pointer;transition:background-color .2s ease-out}
 .btn:hover{background:var(--primary-hover)}.btn:active{background:var(--primary-active)}
 .hide{display:none}
+.hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;letter-spacing:0.01em;color:var(--muted)}
 .plan .rr{color:var(--muted);font-size:12px}
 .actions{display:flex;flex-wrap:wrap;gap:16px;margin-top:24px}.actions .btn{margin-top:0;flex:1 1 auto}
 .btn-2{background:transparent;color:var(--accent-text);border:1px solid var(--accent-text)}
@@ -181,7 +182,7 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
         <label>ราคาเข้า (Entry)<input id="aEntry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
         <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any"></label>
         <label>ทุนในบัญชี (USDT)<input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any"></label>
-        <label>ความเสี่ยงต่อไม้ (%)<input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any"></label>
+        <label>ความเสี่ยงต่อไม้ (%)<input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any" aria-describedby="aRiskHint"><span class="hint" id="aRiskHint"></span></label>
       <div><label>สไตล์แผนเทรด
         <select id="presets">
           <option value="safe">ปลอดภัย — SL 40% ของระยะถึง Liq</option>
@@ -239,7 +240,7 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
       </div>
       <div class="row">
         <label>ทุนในบัญชี (USDT)<input id="balance" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any"></label>
-        <label>ความเสี่ยงต่อไม้ (%)<input id="risk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any"></label>
+        <label>ความเสี่ยงต่อไม้ (%)<input id="risk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any" aria-describedby="riskHint"><span class="hint" id="riskHint"></span></label>
       </div>
       <div class="row">
         <label>ราคาเข้า (Entry)<input id="entry" type="number" inputmode="decimal" autocomplete="off" value="60000" min="0" step="any"></label>
@@ -253,8 +254,9 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
         <span class="lbl" id="levLbl">Leverage</span>
         <div class="lev">
           <input id="levR" type="range" min="1" max="125" value="10" aria-labelledby="levLbl">
-          <input id="lev" type="number" inputmode="decimal" autocomplete="off" min="1" max="125" value="10" aria-label="Leverage (ตัวเลข)">
+          <input id="lev" type="number" inputmode="decimal" autocomplete="off" min="1" max="125" value="10" aria-label="Leverage (ตัวเลข)" aria-describedby="levHint">
         </div>
+        <span class="hint" id="levHint"></span>
       </div>
       <label>Maintenance Margin Rate (%)<input id="mmr" type="number" inputmode="decimal" autocomplete="off" value="0.5" min="0" step="any"></label>
       <div class="msg" id="msg" role="status"></div>
@@ -311,6 +313,8 @@ function calc() {
   const bal = v("balance"), risk = v("risk") / 100, entry = v("entry"), sl = v("sl"),
         tp = v("tp"), fee = v("fee") / 100, lev = v("lev"), mmr = v("mmr") / 100;
   const dir = side === "long" ? 1 : -1;
+  $("riskHint").textContent = bal > 0 && risk > 0 ? `= เสียไม่เกิน ${fmt(bal * risk)} USDT ถ้าโดน SL (ไม่เกี่ยวกับ Leverage)` : "";
+  $("levHint").textContent = "Leverage ไม่เปลี่ยนเงินที่เสียตอนโดน SL — เปลี่ยนแค่ Margin ที่ต้องวาง และระยะถึง Liquidation";
   const out = ["oNotional","oQty","oMargin","oLoss","oProfit","oRR","oROE","oLiq","oFee","oSLd","oBE"];
   const reset = m => { out.forEach(o => $(o).textContent = "–"); $("msg").textContent = m; };
 
@@ -331,6 +335,7 @@ function calc() {
   $("oNotional").textContent = fmt(notional) + " USDT";
   $("oQty").textContent = fmt(qty, 6);
   $("oMargin").textContent = fmt(margin) + " USDT";
+  $("levHint").textContent = `${fmt(lev, 0)}x → วาง Margin ${fmt(margin)} USDT · เงินที่เสียตอนโดน SL ยังเท่าเดิม (${fmt(riskAmt)} USDT)`;
   $("oLoss").textContent = "-" + fmt(riskAmt) + " USDT";
   $("oProfit").textContent = hasTP ? "+" + fmt(profit) + " USDT" : "–";
   $("oRR").textContent = hasTP ? "1 : " + fmt(profit / riskAmt) : "–";
@@ -398,6 +403,7 @@ document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
 function autoCalc() {
   const v = id => parseFloat($(id).value);
   const entry = v("aEntry"), liq = v("aLiq"), bal = v("aBal"), risk = v("aRisk") / 100;
+  $("aRiskHint").textContent = bal > 0 && risk > 0 ? `= เสียไม่เกิน ${fmt(bal * risk)} USDT ถ้าโดน SL (ไม่เกี่ยวกับ Leverage)` : "";
   const ids = ["aRR","aSide","aLev","aSL","aBuf","aNotional","aMargin","aQty","aLoss","aProfit"];
   const reset = m => { ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
   if (![entry, liq, bal, risk].every(n => n > 0)) return reset("กรอก Entry, Liquidation, ทุน และความเสี่ยงให้ครบ");
