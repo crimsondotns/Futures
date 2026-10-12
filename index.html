@@ -15,7 +15,7 @@
   --field-h:44px; /* ความสูงเดียวของทุก control: input, select, dropdown, ปุ่ม Leverage, segmented */
   --primary:#0071e3;--primary-hover:#0077ed;--primary-active:#0066cc;
   --bg:#f5f5f7;--card:#ffffff;--surface:#fafafc;--text:#1d1d1f;--muted:#6e6e73;--border:#d2d2d7;
-  --long:#1f7a35;--short:#d70015;--warn:#b25000;--on-accent:#ffffff;--on-signal:#ffffff;--accent-text:#0071e3;--field-border:#86868b;--track:#e3e3e8;--fill:#e8e8ed;--fill-hover:#dcdce1;
+  --long:#1f7a35;--short:#d70015;--warn:#b25000;--on-accent:#ffffff;--on-signal:#ffffff;--accent-text:#0071e3;--accent-hover:#0066cc;--field-border:#86868b;--track:#e3e3e8;--fill:#e8e8ed;--fill-hover:#dcdce1;
   --r-sm:8px;--r-md:11px;--r-full:9999px;
   --ease:cubic-bezier(0.4,0,0.6,1);
   --font:"SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
@@ -25,13 +25,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#000000;--card:#1d1d1f;--surface:#161617;--text:#f5f5f7;--muted:#a1a1a6;--border:#424245;
   --primary:#0071e3;--long:#30d158;--short:#ff453a;--warn:#ff9f0a;
-  --on-signal:#000000;--accent-text:#2997ff;--field-border:#6e6e73;--track:#3a3a3c;--fill:#3a3a3c;--fill-hover:#48484a}}
+  --on-signal:#000000;--accent-text:#2997ff;--accent-hover:#5eb0ff;--field-border:#6e6e73;--track:#3a3a3c;--fill:#3a3a3c;--fill-hover:#48484a}}
 *{box-sizing:border-box}
 /* scrollbar บาง (ทั้งหน้า + เมนู + dialog) */
-*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--muted) 45%,transparent) transparent}
+*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--muted) 70%,transparent) transparent}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted) 45%,transparent);border-radius:var(--r-full)}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted) 70%,transparent);border-radius:var(--r-full)}
 ::-webkit-scrollbar-thumb:hover{background:var(--muted)}
 
 html{scroll-padding-top:56px}
@@ -127,8 +127,8 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .btn-2:hover{background:#2997ff;border-color:#2997ff;color:#fff}
 .btn-2:active{background:#0066cc;border-color:#0066cc;color:#fff}
 /* ---- Help dialog ---- */
-.link{display:inline-block;margin-top:12px;padding:0;border:0;background:none;color:var(--accent-text);font:400 14px/1.5 var(--font);cursor:pointer}
-.link{transition:opacity .2s ease-out}.link:hover{opacity:.72}
+.link{display:inline-block;margin-top:8px;padding:4px 0;border:0;background:none;color:var(--accent-text);font:400 14px/1.5 var(--font);cursor:pointer}
+.link{transition:color .2s ease-out}.link:hover{color:var(--accent-hover)}
 dialog#helpDlg{width:min(560px,calc(100% - 32px));max-height:min(85vh,800px);padding:32px;border:0;border-radius:var(--r-md);background:var(--card);color:var(--text);overflow-y:auto;overscroll-behavior:contain}
 dialog#helpDlg::backdrop{background:rgba(0,0,0,.32);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)}
 dialog#helpDlg[open]{animation:ld-in 320ms var(--ease)}
@@ -138,7 +138,7 @@ dialog#helpDlg[open]{animation:ld-in 320ms var(--ease)}
 #helpDlg p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)}
 #helpDlg p b{font-weight:600;color:var(--text)}
 .help-t{width:100%;border-collapse:collapse;font-size:14px;line-height:1.5}
-.help-t th{padding:8px 0;white-space:nowrap;text-align:left;font-weight:400;color:var(--muted);border-bottom:1px solid var(--border)}
+.help-t th{padding:8px 0;white-space:normal;text-align:left;font-weight:400;color:var(--muted);border-bottom:1px solid var(--border)}
 .help-t td{padding:8px 0 8px 12px;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--border)}
 .help-t td.calc{color:var(--muted);font-size:12px;white-space:normal}
 .help-t td small{display:block;font-size:12px;font-weight:400;color:var(--muted)}
@@ -149,7 +149,7 @@ dialog#helpDlg[open]{animation:ld-in 320ms var(--ease)}
 .ld-actions.one{grid-template-columns:1fr;margin-top:24px}
 /* ปุ่มใน help dialog ลอยติดขอบล่างตลอด (floating footer) — เนื้อหาเลื่อนผ่านใต้พื้นเบลอ */
 #helpDlg .ld-actions{position:sticky;bottom:-32px;z-index:1;margin:24px -32px -32px;padding:16px 32px 32px;
-  background:var(--card);background:color-mix(in srgb,var(--card) 72%,transparent);
+  background:var(--card);background:color-mix(in srgb,var(--card) 88%,transparent);
   backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
   border-top:1px solid color-mix(in srgb,var(--border) 60%,transparent)}
 @media (max-width:734px){#helpDlg .ld-actions{bottom:-24px;margin:24px -24px -24px;padding:16px 24px 24px}}
@@ -206,9 +206,9 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .ladder{position:relative;height:96px;margin:8px 0 24px}
 .ladder .track{position:absolute;left:0;right:0;top:44px;height:8px;border-radius:var(--r-full);background:var(--bg)}
 .ladder .zone{position:absolute;top:44px;height:8px}
-.ladder .z-liq{background:color-mix(in srgb,var(--warn) 45%,transparent);border-radius:var(--r-full) 0 0 var(--r-full)}
-.ladder .z-loss{background:color-mix(in srgb,var(--short) 55%,transparent)}
-.ladder .z-win{background:color-mix(in srgb,var(--long) 55%,transparent);border-radius:0 var(--r-full) var(--r-full) 0}
+.ladder .z-liq{background:var(--warn);border-radius:var(--r-full) 0 0 var(--r-full)}
+.ladder .z-loss{background:var(--short)}
+.ladder .z-win{background:var(--long);border-radius:0 var(--r-full) var(--r-full) 0}
 .ladder .mk{position:absolute;top:40px;width:2px;height:16px;margin-left:-1px;background:var(--text)}
 .ladder .lb{position:absolute;transform:translateX(-50%);font-size:12px;line-height:1.5;letter-spacing:0.01em;white-space:nowrap;text-align:center;color:var(--muted)}
 .ladder .lb b{display:block;font-weight:400;color:var(--text);font-variant-numeric:tabular-nums}
@@ -224,12 +224,14 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .grp legend{padding:0;margin-bottom:16px;font:600 14px/1.5 var(--font);color:var(--text)}
 .grp>:last-child{margin-bottom:0}
 .hint:empty{display:none}
+.field{margin-bottom:24px}.field>label{margin-bottom:0}
+.field:has(.hint:not(:empty)){margin-bottom:16px}
 label:has(.hint:not(:empty)){margin-bottom:16px}
 .grp>label:last-child{margin-bottom:0}
 .side button.on{font-weight:600}
 .ticket-in .stat .v{font-weight:600;white-space:nowrap;overflow-wrap:normal}
 .ticket-in .stat:nth-last-child(-n+2){border-bottom:0}
-.lev-btn::after{transition:opacity .2s ease-out}.lev-btn:hover::after{opacity:.72}
+.lev-btn::after{transition:color .2s ease-out}.lev-btn:hover::after{color:var(--accent-hover)}
 .top .big2{grid-column:span 4;padding:0 0 24px}.top .big2 .v{font:600 44px/1.2 var(--display);font-variant-numeric:tabular-nums}
 .ticket .ladder{margin-top:32px}
 .res4 .wide{grid-column:1/-1}
@@ -247,7 +249,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 .dd-btn[aria-expanded=true]{border-color:var(--primary)}
 .dd-btn[aria-expanded=true]::after{transform:rotate(180deg)}
 .dd-list{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:50;margin:0;padding:4px;list-style:none;border-radius:var(--r-md);
-  background:var(--surface);background:color-mix(in srgb,var(--surface) 72%,transparent);
+  background:var(--surface);background:color-mix(in srgb,var(--surface) 92%,transparent);
   backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
   border:1px solid color-mix(in srgb,var(--border) 60%,transparent);
   opacity:0;transform:translateY(-4px);visibility:hidden;transition:opacity 320ms var(--ease),transform 320ms var(--ease),visibility 0s 320ms}
@@ -263,9 +265,9 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 .dd-opt[aria-selected=true]::before{background:var(--accent-text);
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6.5l3 3 6-7' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6.5l3 3 6-7' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
-.dd-opt.active{background:color-mix(in srgb,var(--text) 8%,transparent)}
+.dd-opt.active{background:color-mix(in srgb,var(--text) 14%,transparent);outline:2px solid var(--primary);outline-offset:-2px}
 .dd-opt small{display:block;font-size:12px;line-height:1.5;color:var(--muted)}
-@media (forced-colors:active){.dd-list{background:Canvas;border-color:CanvasText}.dd-opt.active{outline:2px solid Highlight}}
+@media (forced-colors:active){.dd-list{background:Canvas;border-color:CanvasText}.dd-opt.active{outline:2px solid Highlight}.tp-in[readonly]{border-color:CanvasText}.ld-chips [aria-pressed=true]{outline:2px solid Highlight}}
 
 /* ผลคำนวณย้ายไปการ์ดขวา */
 .res4 .rr{grid-column:span 2}
@@ -280,9 +282,9 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 </head>
 <body>
 <a class="skip" href="#main">ข้ามไปเนื้อหา</a>
-<nav class="nav" aria-label="หัวเว็บ"><div class="nav-in">
+<header class="nav"><div class="nav-in">
   <span class="nav-title">Futures Trade Calculator</span>
-</div></nav>
+</div></header>
 <main class="wrap" id="main" tabindex="-1">
   <h1>คำนวณก่อนเทรด</h1>
   <p class="sub">คำนวณขนาดโพซิชัน, Margin, ราคา Liquidation, กำไร/ขาดทุน และ Risk:Reward สำหรับ USDT-M Futures</p>
@@ -305,14 +307,14 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
             <input id="aLevIn" type="number" inputmode="decimal" autocomplete="off" min="1" max="125" step="any" value="10" aria-label="Leverage (ตัวเลข)">
           </div>
         </div>
-        <label>ราคา Liquidation<input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any" placeholder="จากหน้า Exchange" aria-describedby="aLiqHint"><span class="hint" id="aLiqHint">กรอกตามที่ Exchange แสดง — เว็บไม่คำนวณให้</span></label>
+        <div class="field"><label for="aLiq">ราคา Liquidation</label><input id="aLiq" type="number" inputmode="decimal" autocomplete="off" value="54300" min="0" step="any" placeholder="จากหน้า Exchange" aria-describedby="aLiqHint"><span class="hint" id="aLiqHint">กรอกตามที่ Exchange แสดง — เว็บไม่คำนวณให้</span></div>
       </fieldset>
       <fieldset class="grp">
         <legend>เงินที่ใส่ไม้นี้</legend>
-        <label>Margin<span class="affix" data-unit="USDT"><input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="100" min="0" step="any" aria-describedby="aBalU aMgnHint"><span class="sr-only" id="aBalU">หน่วย USDT</span></span><span class="hint" id="aMgnHint"></span></label>
+        <div class="field"><label for="aBal">Margin</label><span class="affix" data-unit="USDT"><input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="100" min="0" step="any" aria-describedby="aBalU aMgnHint"></span><span class="sr-only" id="aBalU">หน่วย USDT</span><span class="hint" id="aMgnHint"></span></div>
         <button type="button" class="link" id="helpBtn" aria-haspopup="dialog">คำนวณยังไง?</button>
       </fieldset>
-      <div class="msg" id="aMsg" role="status"></div>
+      <div class="msg" id="aMsg"></div>
     </section>
     <section class="card">
       <h2>แผนเทรดแนะนำ</h2>
@@ -382,7 +384,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
     <h2 id="levDlgT">ปรับ Leverage</h2>
     <div class="ld-val">
       <button type="button" class="ld-step" data-d="-1" aria-label="ลด Leverage">−</button>
-      <output id="ldOut" aria-live="polite">10x</output>
+      <output id="ldOut">10x</output>
       <button type="button" class="ld-step" data-d="1" aria-label="เพิ่ม Leverage">+</button>
     </div>
     <div class="ld-slider"><span aria-hidden="true">1x</span><input id="ldR" type="range" min="1" max="125" value="10" aria-labelledby="levDlgT" aria-valuetext="10x"><span aria-hidden="true">125x</span></div>
@@ -391,8 +393,8 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
     </div>
     <p class="ld-info" id="ldInfo"></p>
     <div class="ld-actions">
-      <button class="btn btn-alt" value="cancel">ยกเลิก</button>
-      <button class="btn" value="ok">ตกลง</button>
+      <button type="submit" class="btn btn-alt" value="cancel">ยกเลิก</button>
+      <button type="submit" class="btn" value="ok">ตกลง</button>
     </div>
   </form>
 </dialog>
@@ -414,7 +416,7 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
     <p><b>เปลี่ยนสไตล์แล้วอะไรเปลี่ยน?</b> สไตล์ยิ่งดุ SL ยิ่งใกล้ Liq — เสียมากขึ้นถ้าโดน SL แต่ราคามีที่แกว่งมากขึ้นก่อนโดน</p>
     <p><b>เพิ่ม Leverage แล้วเป็นยังไง?</b> Margin เท่าเดิมแต่โพซิชันใหญ่ขึ้น Liq ใกล้ขึ้น — กำไรและขาดทุนเป็น USDT มากขึ้นทั้งคู่</p>
     <p class="help-note">ราคา Liquidation ใช้ตามที่กรอกจากหน้า Exchange — เว็บใช้เช็กว่า Stop Loss อยู่ก่อน Liq เท่านั้น</p>
-    <div class="ld-actions one"><button class="btn" value="ok">เข้าใจแล้ว</button></div>
+    <div class="ld-actions one"><button type="submit" class="btn" value="ok">เข้าใจแล้ว</button></div>
   </form>
 </dialog>
 <p class="sr-only" id="live" role="status" aria-live="polite"></p>
@@ -428,7 +430,7 @@ const fmt = (n, d = 2) => isFinite(n)
   ? (NF[d] ??= new Intl.NumberFormat("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })).format(n)
   : "–";
 // ประกาศผลสรุปให้ screen reader หลังหยุดพิมพ์
-let liveT;
+let liveT, booted = false; // booted: ไม่ประกาศผลตอนเปิดหน้าครั้งแรก
 const announce = text => { clearTimeout(liveT); liveT = setTimeout(() => $("live").textContent = text, 600); };
 // ตัวเลขดิบสำหรับวางในช่องราคาของ Exchange (ไม่มีคอมมา, ทศนิยมเท่าที่แสดง)
 const raw = n => String(+n.toFixed(n >= 100 ? 2 : n >= 1 ? 4 : 6));
@@ -486,7 +488,7 @@ function renderTpInputs(seedAll, keepLadder) {
   const box = $("tpList"), old = [...box.querySelectorAll("input")].map(x => x.value);
   const src = box.querySelector("input:not([readonly])")?.value; // ค่าที่ผู้ใช้กรอกเอง — คงไว้แม้เปลี่ยนจำนวน TP/โหมด
   box.innerHTML = Array.from({ length: tpn }, (_, i) =>
-    `<label>TP${i + 1}<input class="tp-in" type="${i !== editIdx() ? "text" : "number"}" inputmode="decimal" autocomplete="off" min="0" step="any" value="${seedAll || !old[i] ? suggestTP(i, tpn) : old[i]}"${i !== editIdx() ? ' readonly tabindex="-1" aria-label="TP' + (i + 1) + ' (คำนวณอัตโนมัติ)"' : ""}></label>`).join("");
+    `<label>TP${i + 1}<input class="tp-in" type="${i !== editIdx() ? "text" : "number"}" inputmode="decimal" autocomplete="off" min="0" step="any" value="${seedAll || !old[i] ? suggestTP(i, tpn) : old[i]}"${i !== editIdx() ? ' readonly aria-label="TP' + (i + 1) + ' (คำนวณอัตโนมัติ)"' : ""}></label>`).join("");
   if (!seedAll && !keepLadder && src) box.querySelectorAll("input")[editIdx()].value = src;
   fillAutoTPs();
 }
@@ -527,13 +529,17 @@ function autoCalc() {
   const v = id => parseFloat($(id).value);
   const entry = v("aEntry"), liq = v("aLiq"), margin = v("aBal");
   const ids = ["aRR","aSL","aBuf","aNotional","aSlPct","aQty","aLoss","aProfit"];
-  const reset = m => { ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
+  document.querySelectorAll("#auto [aria-invalid]").forEach(x => x.removeAttribute("aria-invalid"));
+  const reset = (m, bad) => {
+    (Array.isArray(bad) ? bad : [bad]).filter(Boolean).forEach(x => x.setAttribute("aria-invalid", "true"));
+    if (booted) announce(m);
+    ids.forEach(i => $(i).textContent = "–"); $("aPlan").innerHTML = ""; $("aSteps").innerHTML = ""; $("aMsg").textContent = m; autoPlan = null; };
   $("aMgnHint").textContent = "";
-  if (![entry, liq, margin].every(n => n > 0)) return reset("กรอก Entry, Liquidation และ Margin ให้ครบ");
-  if (entry === liq) return reset("Liquidation ต้องไม่เท่ากับราคาเข้า");
+  if (![entry, liq, margin].every(n => n > 0)) return reset("กรอก Entry, Liquidation และ Margin ให้ครบ", [$("aEntry"), $("aLiq"), $("aBal")].filter(x => !(parseFloat(x.value) > 0)));
+  if (entry === liq) return reset("Liquidation ต้องไม่เท่ากับราคาเข้า", $("aLiq"));
 
   const dir = autoSide === "long" ? 1 : -1;
-  if ((entry - liq) * dir <= 0) return reset(dir > 0 ? "LONG: ราคา Liquidation ต้องต่ำกว่าราคาเข้า" : "SHORT: ราคา Liquidation ต้องสูงกว่าราคาเข้า");
+  if ((entry - liq) * dir <= 0) return reset(dir > 0 ? "LONG: ราคา Liquidation ต้องต่ำกว่าราคาเข้า" : "SHORT: ราคา Liquidation ต้องสูงกว่าราคาเข้า", $("aLiq"));
   const p = PRESETS[preset];
   const dist = Math.abs(entry - liq);
   const lev = parseFloat($("aLevIn").value); // Leverage ที่ผู้ใช้ตั้ง — ไม่คำนวณจาก Liq
@@ -545,11 +551,11 @@ function autoCalc() {
   const split = tpn === 3 ? p.split : SPLITS[tpn];
   const prices = [...document.querySelectorAll("#tpList .tp-in")].map(x => parseFloat(x.value));
   const bad = prices.findIndex(t => !(t > 0) || (t - entry) * dir <= 0);
-  if (bad >= 0) return reset(`TP${bad + 1} ต้อง${dir > 0 ? "สูง" : "ต่ำ"}กว่าราคาเข้า (${dir > 0 ? "LONG" : "SHORT"})`);
+  if (bad >= 0) return reset(`TP${bad + 1} ต้อง${dir > 0 ? "สูง" : "ต่ำ"}กว่าราคาเข้า (${dir > 0 ? "LONG" : "SHORT"})`, document.querySelectorAll("#tpList .tp-in")[bad]);
 
   // SL: จาก TP + R:R preset หรือ (กำหนดเอง) จากสไตล์
   const sl = rrTarget === "custom" ? entry - dir * dist * p.sl : slFromRR(entry, dir, prices, split);
-  if (!(sl > 0)) return reset(`TP ใกล้ราคาเข้าเกินไปสำหรับ R:R 1 : ${rrTarget} — ขยับ TP ให้ไกลขึ้น หรือเลือก R:R ต่ำลง`);
+  if (!(sl > 0)) return reset(`TP ใกล้ราคาเข้าเกินไปสำหรับ R:R 1 : ${rrTarget} — ขยับ TP ให้ไกลขึ้น หรือเลือก R:R ต่ำลง`, document.querySelectorAll("#tpList .tp-in")[editIdx()]);
   const slDist = Math.abs(entry - sl);
   const riskAmt = qty * slDist + AUTO_FEE * qty * (entry + sl); // เงินที่เสียตอนโดน SL (รวมค่าธรรมเนียมเข้า+ออก)
   const tps = prices.map((price, i) => {
@@ -586,7 +592,7 @@ function autoCalc() {
   if (!rrOk) msgs.push(`R:R ทั้งไม้ 1 : ${fmt(rrv)} ต่ำกว่าขั้นต่ำ 1 : ${MIN_RR} — ขยับ TP ให้ไกลขึ้น หรือเพิ่มสัดส่วนปิดที่ TP หลัง`);
   if (lev > 50) msgs.push("Leverage สูงมาก — ราคาแกว่งนิดเดียวก็โดน SL");
   $("aMsg").textContent = msgs.join(" · ");
-  announce(`${dir > 0 ? "LONG" : "SHORT"} ${fmt(lev, 1)}x, ขนาด ${fmt(notional)} USDT, Stop Loss ${px(sl)}, TP สุดท้าย ${px(tps.at(-1).price)}`);
+  if (booted) announce((msgs.length ? "คำเตือน: " + msgs.join(" · ") + ". " : "") + `${dir > 0 ? "LONG" : "SHORT"} ${fmt(lev, 1)}x, ขนาด ${fmt(notional)} USDT, Stop Loss ${px(sl)}, TP สุดท้าย ${px(tps.at(-1).price)}`);
   autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps.at(-1).price, lev: Math.min(125, Math.max(1, Math.round(lev))), };
 }
 
@@ -751,7 +757,13 @@ function enhanceSelect(sel) {
   const close = focus => { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); if (focus) btn.focus(); };
   btn.onclick = () => wrap.classList.contains("open") ? close(true) : open();
   btn.onkeydown = e => { if (["ArrowDown", "ArrowUp"].includes(e.key)) { e.preventDefault(); open(); } };
+  btn.setAttribute("aria-controls", list.id);
   list.onkeydown = e => {
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) { // type-ahead: ไปตัวเลือกถัดไปที่ขึ้นต้นด้วยตัวที่พิมพ์
+      const n = opts.length, i = [...Array(n)].map((_, k) => (active + 1 + k) % n).find(k => opts[k].textContent.trim().toLowerCase().startsWith(e.key.toLowerCase()));
+      if (i != null) setActive(i);
+      return;
+    }
     const n = opts.length;
     if (e.key === "ArrowDown") setActive((active + 1) % n);
     else if (e.key === "ArrowUp") setActive((active - 1 + n) % n);
@@ -789,6 +801,7 @@ function drawLadder() {
 new MutationObserver(drawLadder).observe($("aPlan"), { childList: true });
 drawLadder();
 
+booted = true;
 </script>
 </body>
 </html>
