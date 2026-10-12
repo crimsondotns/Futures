@@ -204,6 +204,11 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
   backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
   border:1px solid color-mix(in srgb,var(--border) 60%,transparent);
   opacity:0;transform:translateY(-4px);visibility:hidden;transition:opacity 320ms var(--ease),transform 320ms var(--ease),visibility 0s 320ms}
+/* เปิดขึ้นบนเมื่อด้านล่างที่ไม่พอ / ชิดขวาเมื่อล้นขอบจอขวา / เลื่อนในเมนูได้ถ้าทั้งบนและล่างไม่พอ */
+.dd.up .dd-list{top:auto;bottom:calc(100% + 8px);transform:translateY(4px)}
+.dd.edge-r .dd-list{left:auto;right:0}
+.dd.edge-l .dd-list{left:0;right:auto}
+.dd-list{overflow-y:auto;overscroll-behavior:contain}
 .dd.open .dd-list{opacity:1;transform:none;visibility:visible;transition:opacity 320ms var(--ease),transform 320ms var(--ease)}
 .dd-opt{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 12px;border-radius:var(--r-sm);font-size:17px;line-height:1.4;color:var(--text);cursor:pointer}
 .dd-opt::before{content:"";flex:none;width:12px;height:12px}
@@ -242,7 +247,6 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
 .plan-ctl label{margin:0!important}
 .plan-ctl .row2{display:contents!important}
 .plan-ctl .dd-list{right:auto;min-width:max(100%,280px)}
-.plan-ctl label:last-child .dd-list{left:auto;right:0}
 @media (max-width:734px){.plan-ctl{grid-template-columns:1fr}}
 </style>
 </head>
@@ -629,7 +633,22 @@ function enhanceSelect(sel) {
   const setActive = i => { active = i; opts.forEach((o, j) => o.classList.toggle("active", j === i)); list.setAttribute("aria-activedescendant", opts[i].id); opts[i].scrollIntoView?.({ block: "nearest" }); };
   const sync = () => { const i = sel.selectedIndex; btn.textContent = opts[i].firstChild.firstChild.textContent; opts.forEach((o, j) => o.setAttribute("aria-selected", j === i)); };
   const choose = i => { if (sel.selectedIndex !== i) { sel.selectedIndex = i; sel.dispatchEvent(new Event("change")); } sync(); };
-  const open = () => { wrap.classList.add("open"); btn.setAttribute("aria-expanded", "true"); setActive(sel.selectedIndex); list.focus(); };
+  // วัดพื้นที่รอบปุ่มทุกครั้งที่เปิด แล้วเลือกทิศ: ล่าง (ค่าเริ่มต้น) / บน / ชิดขวา + จำกัดความสูงให้พอดีจอ
+  const place = () => {
+    const GAP = 8, EDGE = 16, NAV = 56; // header sticky สูง 44 บังด้านบนเสมอ + ระยะ 12
+    const b = btn.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    list.style.maxHeight = "none";
+    const h = list.scrollHeight, w = list.offsetWidth;
+    const below = vh - b.bottom - GAP - EDGE, above = b.top - GAP - NAV;
+    const up = h > below && above > below;
+    wrap.classList.toggle("up", up);
+    list.style.maxHeight = Math.max(120, Math.min(h, up ? above : below)) + "px";
+    wrap.classList.toggle("edge-r", b.left + w > vw - EDGE && b.right - w >= EDGE);
+  };
+  const reflow = () => { if (wrap.classList.contains("open")) place(); };
+  window.addEventListener("resize", reflow);
+  window.addEventListener("scroll", reflow, { passive: true });
+  const open = () => { place(); wrap.classList.add("open"); btn.setAttribute("aria-expanded", "true"); setActive(sel.selectedIndex); list.focus(); };
   const close = focus => { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); if (focus) btn.focus(); };
   btn.onclick = () => wrap.classList.contains("open") ? close(true) : open();
   btn.onkeydown = e => { if (["ArrowDown", "ArrowUp"].includes(e.key)) { e.preventDefault(); open(); } };
