@@ -164,8 +164,7 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 .ld-val output{font:600 44px/1.2 var(--display);font-variant-numeric:tabular-nums}
 /* cursor กระพริบ บอกว่าพิมพ์ตัวเลขได้ */
 .ld-val output{cursor:text;border-radius:var(--r-sm);padding:0 4px}
-.ld-val output:focus{outline:none}
-.ld-val output:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+.ld-val output:focus,.ld-val output:focus-visible{outline:none} /* โฟกัสแสดงด้วย cursor กระพริบแทนกรอบ */
 .ld-val .caret{display:none;width:2px;height:.8em;margin:0 2px;vertical-align:-.04em;border-radius:1px;background:var(--primary);animation:caret 1s steps(1) infinite}
 .ld-val output.typing .caret{display:inline-block}
 @keyframes caret{50%{opacity:0}}
