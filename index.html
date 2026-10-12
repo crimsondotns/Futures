@@ -105,8 +105,10 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .lev-btn:hover{border-color:var(--primary)}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:12px 24px;border:1px solid transparent;border-radius:var(--r-full);background:var(--primary);color:var(--on-accent);font:400 17px/1 var(--font);cursor:pointer;transition:background-color .2s ease-out}
 .btn:hover{background:var(--primary-hover)}.btn:active{background:var(--primary-active)}
-.btn-2{background:transparent;color:var(--accent-text);border-color:var(--accent-text)}
-.btn-2:hover{background:var(--primary);border-color:var(--primary);color:var(--on-accent)}
+/* Secondary button ตาม spec: ขอบ+ตัวอักษร #2997ff, hover เติม #2997ff, active #0066cc */
+.btn-2{background:transparent;color:#2997ff;border-color:#2997ff;transition:background-color .2s ease-out,color .2s ease-out}
+.btn-2:hover{background:#2997ff;border-color:#2997ff;color:#fff}
+.btn-2:active{background:#0066cc;border-color:#0066cc;color:#fff}
 dialog#levDlg{width:min(420px,calc(100% - 32px));padding:32px;border:0;border-radius:var(--r-md);background:var(--card);color:var(--text)}
 dialog#levDlg::backdrop{background:rgba(0,0,0,.32);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)}
 dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
