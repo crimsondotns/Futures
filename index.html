@@ -91,6 +91,11 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 128px;color:var(--muted);fon
 .steps{margin:24px 0 0;padding-left:20px;font-size:14px;line-height:1.5;color:var(--text)}
 .steps li{margin-bottom:12px}.steps b{font-weight:600}
 .hide{display:none}
+/* หน่วยต่อท้ายในช่องกรอก (%, USDT) */
+.affix{position:relative;display:block}
+.affix::after{content:attr(data-unit);position:absolute;right:16px;bottom:13px;font:400 17px/1.5 var(--font);color:var(--muted);pointer-events:none}
+.affix[data-unit="%"] input{padding-right:40px}
+.affix[data-unit="USDT"] input{padding-right:72px}
 /* ราคาในตาราง TP: คลิกเพื่อคัดลอก */
 .copy{position:relative;margin:-4px -8px;padding:4px 8px;border:0;border-radius:var(--r-sm);background:transparent;color:inherit;font:inherit;font-variant-numeric:tabular-nums;cursor:copy;transition:background-color .2s ease-out}
 .copy:hover{background:var(--fill)}
@@ -240,8 +245,8 @@ label:has(.hint){margin-bottom:16px}
       </fieldset>
       <fieldset class="grp">
         <legend>เงินทุน</legend>
-        <label>ทุน (USDT)<input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any"></label>
-        <label>ความเสี่ยงต่อไม้ (%)<input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any" aria-describedby="aRiskHint"><span class="hint" id="aRiskHint"></span></label>
+        <label>ทุน<span class="affix" data-unit="USDT"><input id="aBal" type="number" inputmode="decimal" autocomplete="off" value="1000" min="0" step="any" aria-describedby="aBalU"><span class="sr-only" id="aBalU">หน่วย USDT</span></span></label>
+        <label>ความเสี่ยงต่อไม้<span class="affix" data-unit="%"><input id="aRisk" type="number" inputmode="decimal" autocomplete="off" value="1" min="0" step="any" aria-describedby="aRiskU aRiskHint"><span class="sr-only" id="aRiskU">หน่วยเปอร์เซ็นต์ของทุน</span></span><span class="hint" id="aRiskHint"></span></label>
       </fieldset>
       <fieldset class="grp">
         <legend>แผนเทรด</legend>
