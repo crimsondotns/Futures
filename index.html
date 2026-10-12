@@ -77,6 +77,12 @@ footer{margin-top:48px;color:var(--muted);font-size:12px;line-height:1.5;text-al
 .btn{display:inline-block;margin-top:24px;min-height:44px;padding:12px 24px;border:0;border-radius:var(--r-full);background:var(--primary);color:var(--on-accent);font:400 17px var(--font);cursor:pointer;transition:background-color .2s ease-out}
 .btn:hover{background:var(--primary-hover)}.btn:active{background:var(--primary-active)}
 .hide{display:none}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.actions .btn{margin-top:0}
+.btn-2{background:transparent;color:var(--primary);border:1px solid var(--primary)}
+.btn-2:hover{background:var(--primary);color:var(--on-accent)}.btn-2:active{background:var(--primary-active);color:var(--on-accent)}
+.sym{align-items:end}.sym .btn{margin:0 0 20px}
+input[type=text]{text-transform:uppercase}
+.hint{font-size:12px;color:var(--muted);margin:0 0 20px;min-height:1.5em}
 </style>
 </head>
 <body>
@@ -94,6 +100,11 @@ footer{margin-top:48px;color:var(--muted);font-size:12px;line-height:1.5;text-al
    <div class="grid" id="auto">
     <section class="card">
       <h2>กรอกแค่ 2 ค่า</h2>
+      <div class="row sym">
+        <label>เหรียญ (Binance USDT-M)<input id="aSym" type="text" value="BTCUSDT" autocomplete="off" spellcheck="false"></label>
+        <button class="btn btn-2" id="aFetch">ดึงราคาล่าสุด</button>
+      </div>
+      <p class="hint" id="aMark"></p>
       <div class="row">
         <label>ราคาเข้า (Entry)<input id="aEntry" type="number" value="60000" min="0" step="any"></label>
         <label>ราคา Liquidation<input id="aLiq" type="number" value="54300" min="0" step="any"></label>
@@ -138,7 +149,11 @@ footer{margin-top:48px;color:var(--muted);font-size:12px;line-height:1.5;text-al
         <tbody id="aPlan"></tbody>
       </table>
       <ol class="steps" id="aSteps"></ol>
-      <button class="btn" id="aUse">ส่งไปหน้ากำหนดเอง</button>
+      <div class="actions">
+        <button class="btn" id="aCopy">คัดลอกแผน</button>
+        <button class="btn btn-2" id="aShare">คัดลอกลิงก์แชร์</button>
+        <button class="btn btn-2" id="aUse">ส่งไปหน้ากำหนดเอง</button>
+      </div>
     </section>
   </div>
 
@@ -329,7 +344,7 @@ function autoCalc() {
   if (margin > bal) msgs.push("⚠ Margin เกินทุน — Liquidation ใกล้เกินไปหรือความเสี่ยงสูงเกิน");
   if (lev > 50) msgs.push("⚠ Leverage สูงมาก — ราคาแกว่งนิดเดียวก็โดน SL");
   $("aMsg").textContent = msgs.join(" · ");
-  autoPlan = { dir, entry, sl, tp: tps[1].price, lev: Math.min(125, Math.max(1, Math.round(lev))), bal, risk: risk * 100 };
+  autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps[1].price, lev: Math.min(125, Math.max(1, Math.round(lev))), bal, risk: risk * 100 };
 }
 
 $("aUse").onclick = () => {
@@ -341,6 +356,59 @@ $("aUse").onclick = () => {
   calc();
   document.querySelector("#tabs button[data-tab=manual]").click();
 };
+
+// ---------- ราคาล่าสุดจาก Binance ----------
+$("aFetch").onclick = async () => {
+  const sym = $("aSym").value.trim().toUpperCase();
+  if (!sym) return;
+  $("aMark").textContent = "กำลังดึงราคา…";
+  try {
+    const r = await fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${encodeURIComponent(sym)}`);
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    $("aEntry").value = +(+d.markPrice).toPrecision(8);
+    $("aMark").textContent = `Mark ${px(+d.markPrice)} · Funding ${fmt(d.lastFundingRate * 100, 4)}% ต่อ 8 ชม. — อย่าลืมแก้ราคา Liquidation ให้ตรงกับ Exchange`;
+    autoCalc(); save();
+  } catch { $("aMark").textContent = "ดึงราคาไม่ได้ — ตรวจชื่อเหรียญ เช่น BTCUSDT, ETHUSDT"; }
+};
+
+// ---------- คัดลอกแผน / ลิงก์แชร์ ----------
+const flash = (btn, text) => { const t = btn.textContent; btn.textContent = text; setTimeout(() => btn.textContent = t, 1500); };
+const copy = async (text, btn) => {
+  try { await navigator.clipboard.writeText(text); flash(btn, "คัดลอกแล้ว ✓"); }
+  catch { prompt("คัดลอกข้อความนี้", text); }
+};
+$("aCopy").onclick = () => {
+  const a = autoPlan; if (!a) return;
+  const sym = $("aSym").value.trim().toUpperCase();
+  copy([
+    `📊 ${sym} ${a.dir > 0 ? "LONG" : "SHORT"} · ${fmt(a.rawLev, 1)}x Isolated`,
+    `Entry: ${px(a.entry)}`,
+    `SL: ${px(a.sl)} (เสีย ${fmt(a.riskAmt)} USDT)`,
+    ...a.tps.map((t, i) => `TP${i + 1}: ${px(t.price)} (1:${t.r}) ปิด ${t.pct * 100}%`),
+    `Liq: ${px(a.liq)}`,
+    `ขนาด: ${fmt(a.notional)} USDT · Margin ${fmt(a.margin)} USDT`,
+    `ถึง TP1 → เลื่อน SL มาที่ราคาเข้า`,
+  ].join("\n"), $("aCopy"));
+};
+const state = () => ({ s: $("aSym").value.trim().toUpperCase(), e: $("aEntry").value, l: $("aLiq").value, b: $("aBal").value, r: $("aRisk").value, p: preset, rr });
+$("aShare").onclick = () => copy(location.origin + location.pathname + "?" + new URLSearchParams(state()), $("aShare"));
+
+// ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
+function save() { try { localStorage.setItem("futures-auto", JSON.stringify(state())); } catch {} }
+function load() {
+  let st = Object.fromEntries(new URLSearchParams(location.search));
+  if (!st.e) try { st = JSON.parse(localStorage.getItem("futures-auto")) || {}; } catch { st = {}; }
+  [["s", "aSym"], ["e", "aEntry"], ["l", "aLiq"], ["b", "aBal"], ["r", "aRisk"]].forEach(([k, id]) => { if (st[k]) $(id).value = st[k]; });
+  if (PRESETS[st.p]) { preset = st.p; pick("#presets", document.querySelector(`#presets button[data-p="${preset}"]`)); }
+  const rb = document.querySelector(`#rrs button[data-rr="${st.rr}"]`);
+  if (rb) { rr = +st.rr; pick("#rrs", rb); }
+}
+["aSym", "aEntry", "aLiq", "aBal", "aRisk"].forEach(id => $(id).addEventListener("input", save));
+document.querySelectorAll("#presets button, #rrs button").forEach(b => b.addEventListener("click", save));
+$("aSym").addEventListener("keydown", e => { if (e.key === "Enter") $("aFetch").click(); });
+
+load();
 autoCalc();
 </script>
 </body>
