@@ -176,6 +176,15 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 @media (prefers-reduced-motion:reduce){dialog#levDlg[open]{animation:none}}
 .hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;color:var(--muted)}
 .plan .rr{color:var(--muted);font-size:12px}
+/* ราคา TP ที่ผู้ใช้กรอกเอง */
+.tp-box{margin-bottom:24px}
+.tp-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.tp-head .lbl{margin-bottom:0}.tp-head .link{margin-top:0}
+.tp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px 16px;margin-top:8px}
+.tp-list label{margin:0!important;font-size:12px;line-height:1.5}
+.tp-list input{margin-top:4px}
+.grp>.tp-box:last-child{margin-bottom:0}
+.plan-ctl .tp-box{grid-column:1/-1;margin:0}
 @media (max-width:374px){.res{grid-template-columns:1fr}.stat.big{grid-column:auto}}
 @media (forced-colors:active){
   .side button.on{outline:2px solid Highlight;outline-offset:-2px}
@@ -331,24 +340,18 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
           <option value="agg">ดุดัน — SL 80% ของระยะถึง Liq</option>
         </select>
         </label>
-        <div class="row2">
         <label>จำนวนเป้า TP
         <select id="tpn">
           <option value="1">1 TP — ปิดทั้งหมดที่เป้าเดียว</option>
           <option value="2">2 TP — ปิด 50 / 50</option>
-          <option value="3" selected>3 TP — ตามสไตล์แผนเทรด</option>
+          <option value="3" selected>3 TP — ปิดตามสไตล์แผนเทรด</option>
           <option value="4">4 TP — ปิด 40 / 30 / 20 / 10</option>
           <option value="5">5 TP — ปิด 30 / 25 / 20 / 15 / 10</option>
         </select>
         </label>
-        <label>ระยะ TP สุดท้าย (R)
-        <select id="rrs">
-          <option value="1.5">1.5R — ไกล 1.5 เท่าของระยะ SL</option>
-          <option value="2">2R — ไกล 2 เท่าของระยะ SL</option>
-          <option value="3" selected>3R — ไกล 3 เท่าของระยะ SL</option>
-          <option value="5">5R — ไกล 5 เท่าของระยะ SL</option>
-        </select>
-        </label>
+        <div class="tp-box" role="group" aria-labelledby="tpLbl">
+          <div class="tp-head"><span class="lbl" id="tpLbl">ราคา TP</span><button type="button" class="link" id="tpSeed">ใช้ค่าแนะนำ</button></div>
+          <div class="tp-list" id="tpList"></div>
         </div>
       </fieldset>
       <div class="msg" id="aMsg" role="status"></div>
@@ -444,28 +447,43 @@ const px = n => fmt(n, n >= 100 ? 2 : n >= 1 ? 4 : 6);
 
 // ---------- Auto mode ----------
 const PRESETS = {
-  safe: { sl: 0.4, rr: 2, split: [0.5, 0.3, 0.2] },
-  bal:  { sl: 0.6, rr: 3, split: [0.5, 0.3, 0.2] },
-  agg:  { sl: 0.8, rr: 5, split: [0.4, 0.3, 0.3] },
+  safe: { sl: 0.4, split: [0.5, 0.3, 0.2] },
+  bal:  { sl: 0.6, split: [0.5, 0.3, 0.2] },
+  agg:  { sl: 0.8, split: [0.4, 0.3, 0.3] },
 };
 const AUTO_FEE = 0.0005, AUTO_MMR = 0.005;
 // สัดส่วนปิดต่อจำนวน TP (3 TP ใช้ของสไตล์แผนเทรด)
 const SPLITS = { 1: [1], 2: [0.5, 0.5], 4: [0.4, 0.3, 0.2, 0.1], 5: [0.3, 0.25, 0.2, 0.15, 0.1] };
 let tpn = 3;
-let preset = "bal", rr = 3, autoSide = "long", autoPlan = null;
+let preset = "bal", autoSide = "long", autoPlan = null;
 const pick = (group, b) => document.querySelectorAll(group + " button").forEach(x => (x.classList.toggle("on", x === b), x.setAttribute("aria-pressed", x === b)));
 
 
 $("presets").onchange = () => {
   preset = $("presets").value;
-  // เลือกสไตล์แล้วตั้ง R:R เริ่มต้นของสไตล์นั้นให้ (เปลี่ยนเองต่อได้)
-  rr = PRESETS[preset].rr;
-  $("rrs").value = rr;
-  $("rrs").dispatchEvent(new Event("dd-sync"));
   autoCalc(); save();
 };
-$("rrs").onchange = () => { rr = +$("rrs").value; autoCalc(); save(); };
-$("tpn").onchange = () => { tpn = +$("tpn").value; autoCalc(); save(); };
+$("tpn").onchange = () => { tpn = +$("tpn").value; renderTpInputs(); autoCalc(); save(); };
+
+// ---- ราคา TP: ผู้ใช้กรอกเอง (ไม่ผูกกับ Liquidation) — ค่าแนะนำ 1R…3R ใช้เติมช่องว่างเท่านั้น ----
+function slLevels() {
+  const entry = parseFloat($("aEntry").value), liq = parseFloat($("aLiq").value), dir = autoSide === "long" ? 1 : -1;
+  if (!(entry > 0 && liq > 0) || (entry - liq) * dir <= 0) return null;
+  const sl = entry - dir * Math.abs(entry - liq) * PRESETS[preset].sl;
+  return { entry, dir, sl, slDist: Math.abs(entry - sl) };
+}
+const suggestTP = (i, n) => {
+  const L = slLevels(); if (!L) return "";
+  const r = n === 1 ? 2 : 1 + 2 * i / (n - 1); // กระจาย 1R → 3R
+  return raw(L.entry + L.dir * L.slDist * r);
+};
+function renderTpInputs(seedAll) {
+  const box = $("tpList"), old = [...box.querySelectorAll("input")].map(x => x.value);
+  box.innerHTML = Array.from({ length: tpn }, (_, i) =>
+    `<label>TP${i + 1}<input class="tp-in" type="number" inputmode="decimal" autocomplete="off" min="0" step="any" value="${seedAll || !old[i] ? suggestTP(i, tpn) : old[i]}"></label>`).join("");
+}
+$("tpList").addEventListener("input", () => { autoCalc(); save(); });
+$("tpSeed").onclick = () => { renderTpInputs(true); autoCalc(); save(); };
 // Entry + Leverage ↔ Liquidation: รู้ 2 ค่าได้ค่าที่ 3 — ช่องที่ผู้ใช้แก้ล่าสุดเป็นตัวตั้ง
 // liqManual = ผู้ใช้กรอก Liq จริงจาก Exchange เอง → คำนวณ Leverage ย้อนกลับแทน
 let liqManual = false;
@@ -491,9 +509,10 @@ $("aLiq").oninput = () => { liqManual = true; syncLev(); autoCalc(); refreshLevB
 $("aEntry").oninput = () => { syncLev(); autoCalc(); refreshLevBtns(); };
 $("aBal").oninput = autoCalc;
 document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
+  const changed = autoSide !== b.dataset.side;
   autoSide = b.dataset.side;
   pick("#aDir", b);
-  syncLev(); autoCalc(); save();
+  syncLev(); if (changed) renderTpInputs(true); autoCalc(); save();
 });
 
 function autoCalc() {
@@ -517,13 +536,14 @@ function autoCalc() {
   const riskAmt = qty * slDist + AUTO_FEE * qty * (entry + sl);
   $("aMgnHint").textContent = `× ${fmt(lev, 1)}x = โพซิชัน ${fmt(notional)} USDT`;
 
-  // บันได TP: 1 TP = เป้าสุดท้ายเลย, หลาย TP = กระจายเท่า ๆ กันจาก 1R ถึงเป้าสุดท้าย
+  // TP มาจากราคาที่ผู้ใช้กรอก — R = ระยะ TP ÷ ระยะ SL (ใช้แสดงผลเท่านั้น)
   const split = tpn === 3 ? p.split : SPLITS[tpn];
-  const rs = tpn === 1 ? [rr] : split.map((_, i) => 1 + (rr - 1) * i / (tpn - 1));
-  const tps = rs.map((r, i) => {
-    const price = entry + dir * slDist * r;
-    const q = qty * split[i];
-    return { r, price, pct: split[i], profit: q * slDist * r - AUTO_FEE * q * (entry + price) };
+  const prices = [...document.querySelectorAll("#tpList .tp-in")].map(x => parseFloat(x.value));
+  const bad = prices.findIndex(t => !(t > 0) || (t - entry) * dir <= 0);
+  if (bad >= 0) return reset(`TP${bad + 1} ต้อง${dir > 0 ? "สูง" : "ต่ำ"}กว่าราคาเข้า (${dir > 0 ? "LONG" : "SHORT"}) — หรือกด "ใช้ค่าแนะนำ"`);
+  const tps = prices.map((price, i) => {
+    const r = (price - entry) * dir / slDist, q = qty * split[i];
+    return { r, price, pct: split[i], profit: q * (price - entry) * dir - AUTO_FEE * q * (entry + price) };
   });
   const total = tps.reduce((a, t) => a + t.profit, 0);
 
@@ -555,18 +575,19 @@ function autoCalc() {
   autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps.at(-1).price, lev: Math.min(125, Math.max(1, Math.round(lev))), };
 }
 
-const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, p: preset, rr, n: tpn, d: autoSide });
+const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, m: liqManual ? 1 : 0, b: $("aBal").value, p: preset, n: tpn, t: [...document.querySelectorAll("#tpList .tp-in")].map(x => x.value).join(","), d: autoSide });
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
 function save() { try { localStorage.setItem("futures-auto", JSON.stringify(state())); } catch {} }
+let savedTP = "";
 function load() {
   let st = Object.fromEntries(new URLSearchParams(location.search));
   if (!st.e) try { st = JSON.parse(localStorage.getItem("futures-auto")) || {}; } catch { st = {}; }
   [["e", "aEntry"], ["l", "aLiq"], ["b", "aBal"]].forEach(([k, id]) => { if (st[k]) $(id).value = st[k]; });
   if (PRESETS[st.p]) $("presets").value = preset = st.p;
   if (st.d === "long" || st.d === "short") { autoSide = st.d; pick("#aDir", document.querySelector(`#aDir button[data-side="${st.d}"]`)); }
-  if ([...$("rrs").options].some(o => o.value === st.rr)) $("rrs").value = rr = +st.rr;
   if ([...$("tpn").options].some(o => o.value === String(st.n))) $("tpn").value = tpn = +st.n;
+  if (typeof st.t === "string") savedTP = st.t;
   if (+st.v >= 1) { $("aLevIn").value = st.v; $("aLevR").value = Math.round(st.v); }
   // ข้อมูลเก่า (ก่อนมี Leverage) มีแต่ Liq → ถือว่ากรอกเอง
   liqManual = st.m != null ? st.m == 1 : !!st.l;
@@ -575,6 +596,8 @@ function load() {
 
 load();
 syncLev();
+renderTpInputs();
+if (savedTP) savedTP.split(",").forEach((v, i) => { const x = document.querySelectorAll("#tpList .tp-in")[i]; if (x && v) x.value = v; });
 autoCalc();
 
 // ---- Help dialog: อธิบายความเสี่ยงต่อไม้ด้วยตัวเลขจริงของผู้ใช้ตอนนี้ ----
@@ -740,8 +763,8 @@ function enhanceSelect(sel) {
   sel.addEventListener("dd-sync", sync); // ให้โค้ดที่ตั้ง sel.value เองสั่ง sync ได้
   sync();
 }
-["presets", "tpn", "rrs"].forEach(id => enhanceSelect($(id)));
-const syncDD = () => ["presets", "tpn", "rrs"].forEach(id => $(id).dispatchEvent(new Event("dd-sync")));
+["presets", "tpn"].forEach(id => enhanceSelect($(id)));
+const syncDD = () => ["presets", "tpn"].forEach(id => $(id).dispatchEvent(new Event("dd-sync")));
 syncDD();
 
 
