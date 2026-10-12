@@ -36,6 +36,18 @@ SL วางไว้ **ก่อนถึง Liquidation** เสมอ ตา�
 
 ค่าธรรมเนียม 0.05% ต่อฝั่ง (เข้า + ออก)
 
+## 4. Stop Limit (Trigger / Order Price)
+
+ตั้ง SL เป็นคำสั่ง Stop Limit 2 ช่อง:
+
+```
+Trigger Price = Stop Loss ที่คำนวณได้
+Order Price   = Trigger ∓ ระยะห่าง % ที่ตั้งเอง (ค่าเริ่มต้น 0.5%)
+                LONG → ต่ำกว่า Trigger · SHORT → สูงกว่า Trigger
+```
+
+Order Price ที่เลยออกไปช่วยให้คำสั่งปิดถูกจับคู่แม้ราคาวิ่งแรง — เว็บแสดงขาดทุนสูงสุดถ้าเติมที่ Order Price ด้วย
+
 ---
 
 ## ตัวอย่าง (ค่าเริ่มต้น)

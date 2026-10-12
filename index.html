@@ -184,6 +184,15 @@ dialog#levDlg[open]{animation:ld-in 320ms var(--ease)}
 @media (prefers-reduced-motion:reduce){dialog#levDlg[open]{animation:none}}
 .hint{display:block;margin-top:8px;font-size:12px;line-height:1.5;color:var(--muted)}
 .plan .rr{color:var(--muted);font-size:12px}
+/* Stop Limit: Trigger = SL, Order = เลย Trigger ออกไปอีก x% */
+.sl-box{margin-top:24px}
+.sl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:end;margin-top:8px}
+.sl-grid .field{margin:0!important}.sl-grid .field label{font-size:12px}
+.sl-out{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sl-out .k{font-size:12px;line-height:1.5;color:var(--muted)}
+.sl-out .copy{align-self:flex-start;height:var(--field-h);margin:0;padding:0 8px;font-size:17px;color:var(--short);font-variant-numeric:tabular-nums}
+.plan-ctl .sl-box{grid-column:1/-1}
+@media (max-width:734px){.sl-grid{grid-template-columns:1fr 1fr}.sl-grid .field{grid-column:1/-1}}
 /* ราคา TP ที่ผู้ใช้กรอกเอง */
 .tp-box{margin-bottom:24px}
 .tp-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -367,6 +376,15 @@ label:has(.hint:not(:empty)){margin-bottom:16px}
           </div>
           <div class="tp-list" id="tpList"></div>
         </div>
+        <div class="sl-box" role="group" aria-labelledby="slLbl">
+          <span class="lbl" id="slLbl">Stop Loss (Stop Limit)</span>
+          <div class="sl-grid">
+            <div class="field"><label for="slGap">Order Price ห่างจาก Trigger</label><span class="affix" data-unit="%"><input id="slGap" type="number" inputmode="decimal" autocomplete="off" value="0.5" min="0" step="any" aria-describedby="slGapU"></span><span class="sr-only" id="slGapU">เปอร์เซ็นต์ของราคา Trigger</span></div>
+            <div class="sl-out"><span class="k">Trigger Price</span><button type="button" class="copy" id="slTrig">–</button></div>
+            <div class="sl-out"><span class="k">Order Price</span><button type="button" class="copy" id="slOrder">–</button></div>
+          </div>
+          <span class="hint" id="slHint"></span>
+        </div>
       </fieldset>
       <table class="plan">
         <caption class="sr-only">บันได Take Profit</caption>
@@ -463,8 +481,10 @@ $("tpn").onchange = () => { tpn = +$("tpn").value; renderTpInputs(); autoCalc();
 // ---- ราคา TP: ผู้ใช้กรอกเอง (ไม่ผูกกับ Liquidation) — ค่าแนะนำ 1R…3R ใช้เติมช่องว่างเท่านั้น ----
 function slLevels() {
   const entry = parseFloat($("aEntry").value), liq = parseFloat($("aLiq").value), dir = autoSide === "long" ? 1 : -1;
-  if (!(entry > 0 && liq > 0) || (entry - liq) * dir <= 0) return null;
-  const sl = entry - dir * Math.abs(entry - liq) * PRESETS[preset].sl;
+  if (!(entry > 0)) return null;
+  // Liq ยังไม่ถูกต้อง (เช่น เพิ่งสลับฝั่ง) → ใช้ระยะ SL สมมติ 2% เพื่อเติมค่าแนะนำ TP ไม่ให้ช่องว่าง
+  const dist = liq > 0 && (entry - liq) * dir > 0 ? Math.abs(entry - liq) * PRESETS[preset].sl : entry * 0.02;
+  const sl = entry - dir * dist;
   return { entry, dir, sl, slDist: Math.abs(entry - sl) };
 }
 const suggestTP = (i, n) => {
@@ -517,7 +537,10 @@ const round = (n, d) => +n.toFixed(d);
 function syncLev() { refreshLevBtns(); }
 $("aLevR").oninput = () => { $("aLevIn").value = $("aLevR").value; syncLev(); autoCalc(); save(); };
 $("aLevIn").oninput = () => { $("aLevR").value = $("aLevIn").value; syncLev(); autoCalc(); save(); };
-$("aLiq").oninput = autoCalc;
+$("aLiq").oninput = () => {
+  if ([...document.querySelectorAll("#tpList .tp-in")].some(x => !x.value)) renderTpInputs(true); // เติม TP ที่ว่างหลังแก้ Liq
+  autoCalc();
+};
 $("aEntry").oninput = () => { syncLev(); fillAutoTPs(); autoCalc(); refreshLevBtns(); };
 $("aBal").oninput = autoCalc;
 document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
@@ -530,7 +553,8 @@ document.querySelectorAll("#aDir button").forEach(b => b.onclick = () => {
 function autoCalc() {
   const v = id => parseFloat($(id).value);
   const entry = v("aEntry"), liq = v("aLiq"), margin = v("aBal");
-  const ids = ["aRR","aSL","aBuf","aNotional","aSlPct","aQty","aLoss","aProfit"];
+  $("slHint").textContent = "";
+  const ids = ["slTrig","slOrder","aRR","aSL","aBuf","aNotional","aSlPct","aQty","aLoss","aProfit"];
   document.querySelectorAll("#auto [aria-invalid]").forEach(x => x.removeAttribute("aria-invalid"));
   const reset = (m, bad) => {
     (Array.isArray(bad) ? bad : [bad]).filter(Boolean).forEach(x => x.setAttribute("aria-invalid", "true"));
@@ -567,6 +591,13 @@ function autoCalc() {
   const total = tps.reduce((a, t) => a + t.profit, 0);
 
   $("aSL").textContent = px(sl);
+  // Stop Limit: Order Price เลย Trigger ออกไป (LONG ต่ำกว่า / SHORT สูงกว่า) เพื่อให้คำสั่งปิดถูกจับคู่ตอนราคาวิ่งแรง
+  const gap = Math.max(0, parseFloat($("slGap").value) || 0) / 100;
+  const order = sl * (1 - dir * gap);
+  const worst = qty * Math.abs(entry - order) + AUTO_FEE * qty * (entry + order);
+  for (const [id, v, n] of [["slTrig", sl, "Trigger Price"], ["slOrder", order, "Order Price"]])
+    Object.assign($(id), { textContent: px(v) }), $(id).dataset.v = raw(v), $(id).setAttribute("aria-label", `คัดลอก ${n} ${px(v)}`);
+  $("slHint").textContent = `ถ้าเติมที่ Order Price เสียสูงสุด ${fmt(worst)} USDT (${fmt(worst / margin * 100, 1)}% ของ Margin)`;
   $("aSL").previousElementSibling.textContent = rrTarget === "custom" ? "Stop Loss แนะนำ (ตามสไตล์)" : `Stop Loss (จาก TP + R:R 1 : ${rrTarget})`;
   $("aBuf").textContent = fmt((sl - liq) * dir / entry * 100) + "%"; // ติดลบ = SL เลย Liq
   $("aNotional").textContent = fmt(notional) + " USDT";
@@ -580,7 +611,7 @@ function autoCalc() {
     `<tr><th scope="row">TP${i + 1}</th><td><button type="button" class="copy" data-v="${raw(t.price)}" aria-label="คัดลอกราคา TP${i + 1} ${px(t.price)}">${px(t.price)}</button></td><td>${+t.r.toFixed(2)}R</td><td>${+(t.pct * 100).toFixed(0)}%</td><td class="pos">+${fmt(t.profit)} <span class="rr">(${fmt(t.profit / riskAmt)}R)</span></td></tr>`).join("");
   $("aSteps").innerHTML = [
     `เปิด <b>${dir > 0 ? "LONG" : "SHORT"}</b> ที่ <b>${px(entry)}</b> ขนาด <b>${fmt(notional)} USDT</b> (${fmt(lev, 1)}x, Isolated)`,
-    `ตั้ง Stop Loss ที่ <b>${px(sl)}</b> ทันทีหลังเข้า — เสียไม่เกิน ${fmt(riskAmt)} USDT`,
+    `ตั้ง Stop Limit ทันทีหลังเข้า: Trigger <b>${px(sl)}</b> · Order <b>${px(order)}</b> — เสียราว ${fmt(riskAmt)}–${fmt(worst)} USDT`,
     ...(tpn === 1 ? [`ถึง TP <b>${px(tps[0].price)}</b> ปิดทั้งหมด`] : tps.map((t, i) => {
       const pct = +(t.pct * 100).toFixed(0);
       if (i === 0) return `ถึง TP1 ปิด ${pct}% แล้ว<b>เลื่อน SL มาที่ราคาเข้า</b> (ไม้นี้ไม่ขาดทุนแล้ว)`;
@@ -598,7 +629,7 @@ function autoCalc() {
   autoPlan = { tps, liq, qty, notional, margin, riskAmt, total, rawLev: lev, dir, entry, sl, tp: tps.at(-1).price, lev: Math.min(125, Math.max(1, Math.round(lev))), };
 }
 
-const state = () => ({ e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, b: $("aBal").value, p: preset, n: tpn, tm: tpMode, rt: rrTarget, t: [...document.querySelectorAll("#tpList .tp-in")].map(x => x.value).join(","), d: autoSide });
+const state = () => ({ g: $("slGap").value, e: $("aEntry").value, l: $("aLiq").value, v: $("aLevIn").value, b: $("aBal").value, p: preset, n: tpn, tm: tpMode, rt: rrTarget, t: [...document.querySelectorAll("#tpList .tp-in")].map(x => x.value).join(","), d: autoSide });
 
 // ---------- จำค่าล่าสุด (ลิงก์แชร์มาก่อนค่าที่จำไว้) ----------
 function save() { try { localStorage.setItem("futures-auto", JSON.stringify(state())); } catch {} }
@@ -612,11 +643,20 @@ function load() {
   if ([...$("tpn").options].some(o => o.value === String(st.n))) $("tpn").value = tpn = +st.n;
   if (typeof st.t === "string") savedTP = st.t;
   if ([...$("rrPick").options].some(o => o.value === st.rt)) $("rrPick").value = rrTarget = st.rt;
+  if (st.g != null && st.g !== "") $("slGap").value = st.g;
   if (st.tm === "first" || st.tm === "last") { tpMode = st.tm; pick("#tpMode", document.querySelector(`#tpMode [data-m="${st.tm}"]`)); }
   if (+st.v >= 1) { $("aLevIn").value = st.v; $("aLevR").value = Math.round(st.v); }
   // ข้อมูลเก่า (ก่อนมี Leverage) มีแต่ Liq → ถือว่ากรอกเอง
 }
 ["aEntry", "aLiq", "aBal"].forEach(id => $(id).addEventListener("input", save));
+$("slGap").addEventListener("input", () => { autoCalc(); save(); });
+// คลิก Trigger / Order Price เพื่อคัดลอก (ใช้ copyText + tooltip เดียวกับตาราง TP)
+document.querySelector(".sl-grid").addEventListener("click", async e => {
+  const b = e.target.closest(".copy"); if (!b || !b.dataset.v || !(await copyText(b.dataset.v))) return;
+  document.querySelectorAll(".copy.done").forEach(x => x.classList.remove("done"));
+  b.classList.add("done"); announce(`คัดลอก ${b.dataset.v} แล้ว`);
+  clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove("done"), 1200);
+});
 
 // กด Enter ในช่องกรอก = เสร็จแล้ว → ออกจากช่อง (ปิดคีย์บอร์ดบนมือถือด้วย)
 document.addEventListener("keydown", e => {
