@@ -755,12 +755,13 @@ document.querySelectorAll(".lev-btn").forEach(b => b.onclick = () => {
 $("ldR").oninput = () => { ldDraft = +$("ldR").value; ldUpdate(); };
 // พิมพ์ตัวเลขได้ทันทีที่เปิด dialog (ไม่มีช่อง input): ตัวเลข = ต่อท้าย, Backspace = ลบ, Enter = ตกลง
 // หยุดพิมพ์ 1.2 วิ แล้วพิมพ์ใหม่ = เริ่มเลขใหม่
-let ldTyped = "", ldTypeT;
+let ldTyped = "";
 // โหมดพิมพ์: เปิดเมื่อคลิก/โฟกัสที่ตัวเลข → มี cursor กระพริบ; ออกเมื่อ blur หรือใช้ตัวควบคุมอื่น
 const ldOut = $("ldOut");
 const setTyping = on => { ldOut.classList.toggle("typing", on); if (!on) ldTyped = ""; };
-ldOut.addEventListener("focus", () => { ldTyped = ""; setTyping(true); });
-ldOut.addEventListener("blur", () => { setTyping(false); ldUpdate(); });
+let ldStart = 10;
+ldOut.addEventListener("focus", () => { ldStart = ldDraft; ldTyped = String(ldDraft); setTyping(true); }); // เริ่มจากตัวเลขที่เห็น → Backspace ลบได้
+ldOut.addEventListener("blur", () => { if (!ldTyped) ldDraft = ldStart; setTyping(false); ldUpdate(); }); // ลบจนว่างแล้วออก = กลับเป็นค่าล่าสุด
 ldOut.addEventListener("click", () => ldOut.focus());
 dlg.addEventListener("keydown", e => {
   if (/^[0-9]$/.test(e.key)) {
@@ -768,13 +769,13 @@ dlg.addEventListener("keydown", e => {
     e.preventDefault();
     ldTyped = (ldTyped + e.key).replace(/^0+/, "").slice(0, 3);
     if (+ldTyped > 125) ldTyped = "125";
-  } else if (e.key === "Backspace" && ldOut.classList.contains("typing") && ldTyped) {
+  } else if (e.key === "Backspace" && ldOut.classList.contains("typing")) {
     e.preventDefault(); ldTyped = ldTyped.slice(0, -1);
   } else if (e.key === "Enter" && e.target.tagName !== "BUTTON") {
-    e.preventDefault(); ldTyped = ""; dlg.close("ok"); return;
+    e.preventDefault(); if (!ldTyped) ldDraft = ldStart; setTyping(false); dlg.close("ok"); return;
   } else return;
-  clearTimeout(ldTypeT); ldTypeT = setTimeout(() => { ldTyped = ""; ldUpdate(); }, 1200);
-  if (ldTyped) { ldDraft = +ldTyped; ldUpdate(true); } else ldUpdate();
+  if (ldTyped) ldDraft = +ldTyped;
+  ldUpdate(true); // แสดงตามที่พิมพ์ (ว่างได้) — ldDraft คงค่าล่าสุดที่ใช้ได้
 });
 dlg.querySelectorAll(".ld-step").forEach(b => b.onclick = () => { ldDraft += +b.dataset.d; ldUpdate(); });
 dlg.querySelectorAll(".ld-chips button").forEach(b => b.onclick = () => { ldDraft = +b.dataset.v; ldUpdate(); });
